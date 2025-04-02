@@ -65,4 +65,7 @@ dependencies {
 
     // libs do Firestore
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.3")
+
+    //Dependencia BCrypt (Criptografia)
+    implementation("org.mindrot:jbcrypt:0.4")
 }

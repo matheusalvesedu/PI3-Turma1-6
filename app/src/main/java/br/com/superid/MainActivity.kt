@@ -1,6 +1,7 @@
 package br.com.superid
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -39,6 +40,9 @@ import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.SuperIDTheme
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import org.mindrot.jbcrypt.BCrypt
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,21 +131,37 @@ fun SuperID(modifier: Modifier = Modifier){
         }
     }
 }
+//Criptografar a senha
+fun hashPassword(password: String): String {
+    return BCrypt.hashpw(password, BCrypt.gensalt())
+}
+
+/*Função que verifica senha no login
+fun checkPassword(inputPassword: String, hashedPassword: String): Boolean {
+    return BCrypt.checkpw(inputPassword, hashedPassword)
+}*/
 
 /***
  * Função que adiciona uma conta no Firestore.
  */
-fun saveNewAccount(email: String, senha: String){
 
+fun saveNewAccount(email: String, senha: String) {
     // 1° passo: Obtendo a instância db (singleton)
     val db = Firebase.firestore
+    val hashedSenha = hashPassword(senha) // Criptografa a senha
 
-    // Criar um documento que representa uma conta.
-    // De maneira simples usando HashMap.
     val newAccount = hashMapOf(
         "email" to email,
-        "senha" to senha
+        "senha" to hashedSenha  // Salva apenas o hash!
     )
 
     db.collection("accounts").add(newAccount)
+        .addOnSuccessListener {
+            Log.d("Firestore", "Conta salva com sucesso!")
+        }
+        .addOnFailureListener { e ->
+            Log.e("Firestore", "Erro ao salvar conta", e)
+        }
 }
+
+
