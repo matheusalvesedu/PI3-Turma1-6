@@ -52,7 +52,9 @@ class SignUpActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PreviewSignUp()
+            SuperIDTheme {
+                PreviewSignUp()
+            }
         }
     }
 }
