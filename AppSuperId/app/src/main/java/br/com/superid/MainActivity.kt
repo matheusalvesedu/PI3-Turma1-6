@@ -1,5 +1,6 @@
 package br.com.superid
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +73,7 @@ fun SuperID(modifier: Modifier = Modifier){
     var senha by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val focusRequesterSenha = remember { FocusRequester() }
+    var context = LocalContext.current
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = "SuperID",
             style = MaterialTheme.typography.headlineLarge.copy(
@@ -121,9 +124,7 @@ fun SuperID(modifier: Modifier = Modifier){
 
         Button(
             onClick = {
-                saveNewAccount(email, senha)
-                email = ""
-                senha = ""
+                mudarTela(context,SignUpActivity::class.java)
             },
             enabled = email.isNotEmpty() && senha.isNotEmpty()
         ) {
@@ -131,9 +132,9 @@ fun SuperID(modifier: Modifier = Modifier){
         }
     }
 }
-//Criptografar a senha
-fun hashPassword(password: String): String {
-    return BCrypt.hashpw(password, BCrypt.gensalt())
+fun mudarTela(context: android.content.Context, destination: Class<*>){
+    val intent = Intent(context,destination)
+    context.startActivity(intent)
 }
 
 /*Função que verifica senha no login

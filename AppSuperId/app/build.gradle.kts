@@ -68,4 +68,7 @@ dependencies {
 
     //Dependencia BCrypt (Criptografia)
     implementation("org.mindrot:jbcrypt:0.4")
+
+    //Auth
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
 }
