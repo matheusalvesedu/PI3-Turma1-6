@@ -8,16 +8,26 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,6 +96,7 @@ fun PreviewSignUp(){
     SignUp()
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUp(){
 
@@ -93,64 +104,106 @@ fun SignUp(){
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        //TODO: Substituir texto pelo ícone do app
+                        Text(text = "Super ID")
+                    }
+                },
+                colors = topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        },
 
-        Text(text = "Cadastro",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            ),
+        ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .padding(10.dp)
-        )
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = {name = it},
-            label = { Text("Digite seu Nome")},
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true
-        )
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = {email = it},
-            label = { Text("Digite seu E-mail")},
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = {password = it},
-            label = { Text("Digite sua Senha")},
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true
-        )
-
-        Button(
-            onClick = {
-                saveNewAccount(name,email, password)
-            },
-            enabled = email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty(),
-            modifier = Modifier.padding(10.dp)
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(color = Color.Transparent),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Salvar", fontSize = 24.sp)
+
+            Text(
+                text = "Cadastro",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                ),
+                modifier = Modifier.padding(20.dp)
+            )
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Digite seu Nome") },
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(10.dp),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = Color.Black,
+                    focusedBorderColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    focusedPlaceholderColor = Color.Black
+                )
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Digite seu E-mail") },
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(10.dp),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = Color.Black,
+                    focusedBorderColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    focusedPlaceholderColor = Color.Black
+                )
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Digite sua Senha") },
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(10.dp),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    cursorColor = Color.Black,
+                    focusedBorderColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    focusedPlaceholderColor = Color.Black
+                )
+            )
+
+            Button(
+                onClick = {
+                    saveNewAccount(name, email, password)
+                },
+                enabled = email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty(),
+                modifier = Modifier.padding(20.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black
+                )
+            ) {
+                Text(text = "Salvar", fontSize = 24.sp)
+            }
         }
     }
 }
