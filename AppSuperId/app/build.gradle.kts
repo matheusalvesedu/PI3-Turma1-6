@@ -82,4 +82,7 @@ dependencies {
     implementation("org.mindrot:jbcrypt:0.4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    //Auth
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
 }
