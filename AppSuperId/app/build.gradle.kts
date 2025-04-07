@@ -83,6 +83,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    //Auth
-    implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
+
 }

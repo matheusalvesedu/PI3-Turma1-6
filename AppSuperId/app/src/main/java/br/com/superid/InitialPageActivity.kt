@@ -68,6 +68,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
     var context = LocalContext.current
     var presses by remember { mutableStateOf(0)}
     Scaffold(
+        modifier = Modifier.fillMaxSize().background(color = Color.White),
             topBar = {
                 TopAppBar(
                     title = {
@@ -76,11 +77,17 @@ fun TelaInicial(modifier: Modifier = Modifier){
                             horizontalAlignment = Alignment.CenterHorizontally
                         ){
                             //TODO: Substituir texto pelo ícone do app
-                            Text(text = "Super ID")
+                            Text(text = "Super ID",
+                                style = MaterialTheme.typography.headlineLarge.copy(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                            )
                         }
                     },
                     colors = topAppBarColors(
-                        containerColor = Color.Transparent
+                        containerColor = Color.White
                     )
                 )
             },
@@ -88,10 +95,13 @@ fun TelaInicial(modifier: Modifier = Modifier){
         ) { paddingValues ->
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(paddingValues)
                     .fillMaxWidth()
-                    .background(color = Color.Transparent),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .background(color = Color.White),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+
             ) {
                 Spacer(modifier = Modifier.height(100.dp))
 
@@ -101,6 +111,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                         color = Color.Black
                     ),
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(30.dp)
                 )
 
@@ -118,12 +129,14 @@ fun TelaInicial(modifier: Modifier = Modifier){
                         containerColor = Color.Black
                     )
                 ) {
-                    Text("Criar conta", fontSize = 20.sp)
+                    Text("Criar conta",
+                        fontSize = 20.sp,
+                        color = Color.White)
                 }
-
+                Spacer (modifier = Modifier.height(10.dp))
                 OutlinedButton(
                     onClick = {
-                        //TODO: Mudar a tela para o Login
+                        mudarTela(context, LoginActivity::class.java)
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)

@@ -1,7 +1,9 @@
 package br.com.superid
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +62,7 @@ class SignUpActivity : ComponentActivity() {
     }
 }
 
-fun saveNewAccount(name: String, email: String, password: String) {
+fun saveNewAccount(name: String, email: String, password: String, context: Context) {
     val auth = Firebase.auth
     val db = Firebase.firestore
     auth.createUserWithEmailAndPassword(email, password)
@@ -75,8 +78,10 @@ fun saveNewAccount(name: String, email: String, password: String) {
                         Log.d("Firestore", "Conta salva com sucesso!")
                     }
                     .addOnFailureListener{ e ->
-                        Log.e("Firesore", "Erro ao salvar a conta", e)
+                        Log.e("Firestore", "Erro ao salvar a conta", e)
                     }
+                Toast.makeText(context, "Cadastro realizado!", Toast.LENGTH_SHORT).show()
+                mudarTela(context, LoginActivity::class.java)
 
                 Log.i("CREATION-TEST", "ID do novo usuário: ${user.uid}")
             } else {
@@ -84,6 +89,7 @@ fun saveNewAccount(name: String, email: String, password: String) {
                 task.exception?.let { e ->
                     Log.e("CREATION-ERROR", "Erro ao criar usuário", e)
                 }
+                Toast.makeText(context, "Erro: Cadastro não realizado", Toast.LENGTH_LONG).show()
             }
         }
 }
@@ -105,21 +111,30 @@ fun SignUp(){
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var context = LocalContext.current
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().background(color = Color.White),
         topBar = {
             TopAppBar(
                 title = {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
+
                     ){
                         //TODO: Substituir texto pelo ícone do app
-                        Text(text = "Super ID")
+                        Text(text = "Super ID",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        )
                     }
                 },
                 colors = topAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = Color.White
                 )
             )
         },
@@ -129,7 +144,7 @@ fun SignUp(){
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .background(color = Color.Transparent),
+                .background(color = Color.White),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -156,7 +171,8 @@ fun SignUp(){
                     cursorColor = Color.Black,
                     focusedBorderColor = Color.Black,
                     focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black
+                    focusedPlaceholderColor = Color.Black,
+                    focusedTextColor = Color.Black
                 )
             )
 
@@ -173,7 +189,8 @@ fun SignUp(){
                     cursorColor = Color.Black,
                     focusedBorderColor = Color.Black,
                     focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black
+                    focusedPlaceholderColor = Color.Black,
+                    focusedTextColor = Color.Black
                 )
             )
 
@@ -190,13 +207,14 @@ fun SignUp(){
                     cursorColor = Color.Black,
                     focusedBorderColor = Color.Black,
                     focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black
+                    focusedPlaceholderColor = Color.Black,
+                    focusedTextColor = Color.Black
                 )
             )
 
             Button(
                 onClick = {
-                    saveNewAccount(name, email, password)
+                    saveNewAccount(name, email, password, context)
                 },
                 enabled = email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty(),
                 modifier = Modifier.padding(20.dp),
@@ -204,7 +222,9 @@ fun SignUp(){
                     containerColor = Color.Black
                 )
             ) {
-                Text(text = "Salvar", fontSize = 24.sp)
+                Text(text = "Salvar",
+                    fontSize = 24.sp,
+                    color = Color.White)
             }
         }
     }
