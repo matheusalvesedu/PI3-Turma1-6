@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -38,13 +42,19 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +65,8 @@ import br.com.superid.ui.theme.SuperIDTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.mindrot.jbcrypt.BCrypt
 
 class SignUpActivity : ComponentActivity() {
@@ -121,21 +133,43 @@ fun PreviewSignUp(){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUp(){
-
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordConfirm by remember { mutableStateOf("") }
 
+    //Valores que validam senha e email
     val isEmailValid = remember(email){
         Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
     val isPasswordValid = passwordValidation(password)
+    var isButtonEnabled by remember { mutableStateOf(true) }
 
+    //Valor utilizado tanto na rolagem da tela, como no tempo para reabilitar o botão
+    val scope = rememberCoroutineScope()
+
+    //Variável para identificar em qual tela/activity está
     var context = LocalContext.current
 
+    //Valores e funções utilizadas para a rolagem da tela ao clicar em uma TextField
+    val scrollState = rememberScrollState()
+    val focusManager = LocalFocusManager.current
+    var focusedTextFieldOffset by remember { mutableIntStateOf(0) }
+    fun calculateScrollOffset(offsetProvider: () -> Int) {
+        scope.launch {
+            val target = offsetProvider()
+            val visibleArea = scrollState.value + scrollState.viewportSize
+            if (target > visibleArea) {
+                scrollState.animateScrollTo(target)
+            }
+        }
+    }
+
     Scaffold(
-        modifier = Modifier.fillMaxSize().background(color = Color.White),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.White)
+            .imePadding(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -164,6 +198,7 @@ fun SignUp(){
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .background(color = Color.White),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -184,7 +219,17 @@ fun SignUp(){
                 label = { Text("Digite seu Nome") },
                 modifier = Modifier
                     .width(300.dp)
-                    .padding(10.dp),
+                    .padding(10.dp)
+                    .onGloballyPositioned {
+                        focusedTextFieldOffset = it.positionInParent().y.toInt()
+                    }
+                    .onFocusEvent {
+                        if(it.isFocused){
+                            calculateScrollOffset {
+                                focusedTextFieldOffset
+                            }
+                        }
+                    },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -202,7 +247,17 @@ fun SignUp(){
                 label = { Text("Digite seu E-mail") },
                 modifier = Modifier
                     .width(300.dp)
-                    .padding(start = 10.dp, end = 10.dp),
+                    .padding(start = 10.dp, end = 10.dp)
+                    .onGloballyPositioned {
+                        focusedTextFieldOffset = it.positionInParent().y.toInt()
+                    }
+                    .onFocusEvent {
+                        if(it.isFocused){
+                            calculateScrollOffset {
+                                focusedTextFieldOffset
+                            }
+                        }
+                    },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -227,7 +282,17 @@ fun SignUp(){
                 label = { Text("Digite sua Senha") },
                 modifier = Modifier
                     .width(300.dp)
-                    .padding(10.dp),
+                    .padding(10.dp)
+                    .onGloballyPositioned {
+                        focusedTextFieldOffset = it.positionInParent().y.toInt()
+                    }
+                    .onFocusEvent {
+                        if(it.isFocused){
+                            calculateScrollOffset {
+                                focusedTextFieldOffset
+                            }
+                        }
+                    },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -252,7 +317,17 @@ fun SignUp(){
                 label = { Text("Confirme sua Senha") },
                 modifier = Modifier
                     .width(300.dp)
-                    .padding(start = 10.dp, end = 10.dp),
+                    .padding(start = 10.dp, end = 10.dp)
+                    .onGloballyPositioned {
+                        focusedTextFieldOffset = it.positionInParent().y.toInt()
+                    }
+                    .onFocusEvent {
+                        if(it.isFocused){
+                            calculateScrollOffset {
+                                focusedTextFieldOffset
+                            }
+                        }
+                    },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -278,11 +353,17 @@ fun SignUp(){
             Button(
                 onClick = {
                     saveNewAccount(name, email, password, context)
+                    isButtonEnabled = false
+                    scope.launch {
+                        delay(5000L)
+                        isButtonEnabled = true
+                    }
                 },
                 enabled = name.isNotEmpty() && email.isNotEmpty()
                         && isEmailValid && isPasswordValid
                         && password.isNotEmpty() && passwordConfirm.isNotEmpty()
-                        && password == passwordConfirm,
+                        && password == passwordConfirm
+                        && isButtonEnabled,
                 modifier = Modifier.padding(20.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black
