@@ -17,7 +17,6 @@
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.SuperID" />
         <activity
-            android:name=".MainActivity"
             android:name=".SignUpActivity"
             android:exported="false"
             android:label="@string/title_activity_sign_up"
