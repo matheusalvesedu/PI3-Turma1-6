@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.SuperIDTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import org.mindrot.jbcrypt.BCrypt
+
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
