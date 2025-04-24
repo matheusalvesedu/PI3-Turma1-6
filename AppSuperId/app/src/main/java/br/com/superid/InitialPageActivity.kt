@@ -158,8 +158,3 @@ fun TelaInicial(modifier: Modifier = Modifier){
             }
         }
     }
-
-fun mudarTela(context: Context, destination: Class<*>){
-    val intent = Intent(context,destination)
-    context.startActivity(intent)
-}

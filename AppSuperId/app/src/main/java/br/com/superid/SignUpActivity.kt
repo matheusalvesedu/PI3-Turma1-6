@@ -114,11 +114,6 @@ fun saveNewAccount(name: String, email: String, password: String, context: Conte
         }
 }
 
-fun hashPassword(password: String, cost: Int = 10): String {
-    val salt = BCrypt.gensalt(cost)
-    return BCrypt.hashpw(password, salt)
-}
-
 fun passwordValidation(password: String): Boolean {
     val PASSWORD_REGEX = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=!]).{8,}$".toRegex()
     return PASSWORD_REGEX.matches(password)
