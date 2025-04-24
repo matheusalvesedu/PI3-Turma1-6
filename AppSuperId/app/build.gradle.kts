@@ -75,13 +75,8 @@ dependencies {
     // libs do Firestore
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.3")
 
-    //libs do Auth
+    // libs do Auth
     implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
-
-    //Dependencia BCrypt (Criptografia)
-    implementation("org.mindrot:jbcrypt:0.4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
 
 }
