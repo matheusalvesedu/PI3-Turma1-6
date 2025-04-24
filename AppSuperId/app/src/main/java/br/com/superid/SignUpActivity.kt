@@ -82,10 +82,9 @@ class SignUpActivity : ComponentActivity() {
 }
 
 fun saveNewAccount(name: String, email: String, password: String, context: Context) {
-    val hashedPassword = hashPassword(password)
     val auth = Firebase.auth
     val db = Firebase.firestore
-    auth.createUserWithEmailAndPassword(email, hashedPassword)
+    auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if(task.isSuccessful){
                 val user = auth.currentUser
