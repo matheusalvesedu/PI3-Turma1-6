@@ -166,28 +166,3 @@ fun login(modifier: Modifier = Modifier){
 
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
-    TextField(
-        value = variavel,
-        onValueChange = onValueChange,
-        label = {
-            Text(text = texto,
-                fontSize = 12.sp,
-                fontFamily = PoppinsFonts.regular
-            )},
-        modifier = Modifier
-            .width(300.dp)
-            .padding(10.dp),
-        singleLine = true,
-        colors = TextFieldDefaults.textFieldColors(
-            focusedIndicatorColor = AppColors.gunmetal,
-            unfocusedIndicatorColor = AppColors.platinum,
-            containerColor = Color.Transparent,
-            focusedLabelColor = AppColors.gunmetal,
-            cursorColor = AppColors.gunmetal
-        )
-    )
-}
