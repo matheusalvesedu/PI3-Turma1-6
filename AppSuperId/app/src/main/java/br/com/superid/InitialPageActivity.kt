@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.PoppinsFonts
+import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 
 
@@ -78,7 +80,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
     var context = LocalContext.current
     var presses by remember { mutableStateOf(0)}
     Scaffold(
-        modifier = Modifier.fillMaxSize().background(color = Color.White),
+        modifier = Modifier.fillMaxSize().background(color = AppColors.white),
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -88,16 +90,16 @@ fun TelaInicial(modifier: Modifier = Modifier){
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.logo_superid_black),
+                                painter = painterResource(R.drawable.logo_superid_darkblue),
                                 contentDescription = "Logo do Super ID",
                                 modifier = Modifier
-                                    .size(100.dp)
-                                    .padding(top = 10.dp)
+                                    .size(120.dp)
+                                    .padding(top = 25.dp)
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White
+                        containerColor = AppColors.white
                     )
                 )
             },
@@ -108,7 +110,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                     .fillMaxSize()
                     .padding(paddingValues)
                     .fillMaxWidth()
-                    .background(color = Color.White),
+                    .background(color = AppColors.white),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
 
@@ -118,6 +120,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                 Text(text = "O gerenciador\nde senhas\nmais seguro\ndo mercado.",
                     fontFamily = PoppinsFonts.bold,
                     fontSize = 30.sp,
+                    color = AppColors.gunmetal,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(30.dp)
@@ -134,19 +137,20 @@ fun TelaInicial(modifier: Modifier = Modifier){
                         .width(300.dp)
                         .height(60.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black
+                        containerColor = AppColors.gunmetal
                     )
                 ) {
                     Text("Criar conta",
                         fontFamily = PoppinsFonts.regular,
                         fontSize = 20.sp,
-                        color = Color.White)
+                        color = AppColors.platinum)
                 }
                 Spacer (modifier = Modifier.height(10.dp))
                 OutlinedButton(
                     onClick = {
                         mudarTela(context, LoginActivity::class.java)
                     },
+                    border = BorderStroke(2.dp, AppColors.gunmetal),
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .width(300.dp)
@@ -155,7 +159,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                     Text("Já tenho uma conta",
                         fontFamily = PoppinsFonts.regular,
                         fontSize = 20.sp,
-                        color = Color.Black
+                        color = AppColors.gunmetal
                     )
                 }
             }

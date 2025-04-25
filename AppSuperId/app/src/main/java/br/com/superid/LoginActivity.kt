@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +56,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.SuperIDTheme
+import br.com.superid.ui.theme.AppColors
+import br.com.superid.PoppinsFonts
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -109,16 +112,16 @@ fun login(modifier: Modifier = Modifier){
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.logo_superid_black),
+                            painter = painterResource(R.drawable.logo_superid_darkblue),
                             contentDescription = "Logo do Super ID",
                             modifier = Modifier
-                                .size(100.dp)
+                                .size(120.dp)
                                 .padding(top = 10.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = AppColors.white
                 )
             )
         },
@@ -127,20 +130,20 @@ fun login(modifier: Modifier = Modifier){
         modifier = Modifier
             .padding(paddingValues)
             .fillMaxSize()
-            .background(color = Color.White),
+            .background(color = AppColors.white),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     )
     {
-        Text(text = "Login",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            ),
+        Text(text = "Bem-vindo de volta! \nDigite seu e-mail e senha:",
+            fontFamily = PoppinsFonts.medium,
+            fontSize = 24.sp,
+            color = AppColors.gunmetal,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(10.dp)
         )
+
         Spacer(modifier = Modifier.size(10.dp))
 
         OutlinedTextField(
@@ -174,6 +177,7 @@ fun login(modifier: Modifier = Modifier){
                 focusedTextColor = Color.Black
             )
         )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
@@ -181,10 +185,13 @@ fun login(modifier: Modifier = Modifier){
                 loginAuth(email,senha,context)
             },
             enabled = email.isNotEmpty() && senha.isNotEmpty(),
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(300.dp)
+                .height(60.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black
-            )
+                containerColor = AppColors.gunmetal
+            ),
         ) {
             Text(text = "Entrar",
                 fontSize = 24.sp,

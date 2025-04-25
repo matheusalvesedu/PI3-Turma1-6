@@ -13,8 +13,10 @@ fun mudarTela(context: Context, destination: Class<*>){
 
 val poppinsRegular = FontFamily(Font(R.font.poppins_regular))
 val poppinsBold = FontFamily(Font(R.font.poppins_bold))
+val poppinsMedium = FontFamily(Font(R.font.poppins_medium))
 
 object PoppinsFonts {
     val regular = poppinsRegular
+    val medium = poppinsMedium
     val bold = poppinsBold
 }
