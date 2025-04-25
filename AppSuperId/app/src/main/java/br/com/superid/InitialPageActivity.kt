@@ -41,10 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.superid.PoppinsFonts
 import br.com.superid.ui.theme.SuperIDTheme
 
 
@@ -113,10 +116,8 @@ fun TelaInicial(modifier: Modifier = Modifier){
                 Spacer(modifier = Modifier.height(100.dp))
 
                 Text(text = "O gerenciador\nde senhas\nmais seguro\ndo mercado.",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    ),
+                    fontFamily = PoppinsFonts.bold,
+                    fontSize = 30.sp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(30.dp)
@@ -137,6 +138,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                     )
                 ) {
                     Text("Criar conta",
+                        fontFamily = PoppinsFonts.regular,
                         fontSize = 20.sp,
                         color = Color.White)
                 }
@@ -151,6 +153,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                         .height(60.dp)
                 ) {
                     Text("Já tenho uma conta",
+                        fontFamily = PoppinsFonts.regular,
                         fontSize = 20.sp,
                         color = Color.Black
                     )
