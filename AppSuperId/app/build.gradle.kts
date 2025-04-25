@@ -78,5 +78,8 @@ dependencies {
     // libs do Auth
     implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
 
+    // libs do Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
 
 }

@@ -12,55 +12,44 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusEvent
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 
 class SignUpActivity : ComponentActivity() {
@@ -73,6 +62,24 @@ class SignUpActivity : ComponentActivity() {
             }
         }
     }
+}
+
+data class PasswordRequirements(
+    val hasMinLength: Boolean = false,
+    val hasUppercase: Boolean = false,
+    val hasLowerCase: Boolean = false,
+    val hasDigit: Boolean = false,
+    val hasSpecialChar: Boolean = false
+)
+
+fun checkPasswordRequirements(password: String): PasswordRequirements{
+    return PasswordRequirements(
+        hasMinLength = password.length >= 8,
+        hasUppercase = password.any {it.isUpperCase()},
+        hasLowerCase = password.any {it.isLowerCase()},
+        hasDigit = password.any {it.isDigit()},
+        hasSpecialChar = password.any {it in "@#$%&+=!"}
+    )
 }
 
 fun saveNewAccount(name: String, email: String, password: String, context: Context) {
@@ -107,260 +114,336 @@ fun saveNewAccount(name: String, email: String, password: String, context: Conte
         }
 }
 
-fun passwordValidation(password: String): Boolean {
-    val PASSWORD_REGEX = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=!]).{8,}$".toRegex()
-    return PASSWORD_REGEX.matches(password)
-}
-
 @Preview
 @Composable
 fun PreviewSignUp(){
-    SignUp()
+    SignUpFlow()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUp(){
+fun SignUpFlow(){
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "name") {
+        composable("name") { NameScreen(navController) }
+        composable("email/{name}") { entry ->
+            entry.arguments?.getString("name")?.let { name ->
+                EmailScreen(navController,name)
+            }
+        }
+        composable("password/{name}/{email}") { entry->
+            entry.arguments?.getString("name")?.let { name ->
+                entry.arguments?.getString("email")?.let{email ->
+                    PasswordScreen(navController,name,email)
+                }
+            }
+
+        }
+    }
+
+}
+
+@Composable
+fun NameScreen(navController: NavController){
+
     var name by remember { mutableStateOf("") }
+
+    Scaffold(
+        containerColor = AppColors.white,
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.CenterEnd
+            ){
+                Button(
+                    onClick = { navController.navigate("email/$name") },
+                    enabled = name.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (name.isNotBlank()) AppColors.gunmetal else AppColors.jet,
+                        contentColor = AppColors.white
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .height(50.dp)
+
+                ) {
+                    Text(text = "Avançar",
+                        fontFamily = PoppinsFonts.medium,
+                        fontSize = 12.sp,
+                        color = if(name.isNotBlank()) AppColors.platinum else AppColors.gunmetal
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = AppColors.white)
+                .padding((innerPadding)),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.logo_superid_darkblue),
+                    contentDescription = "Logo do Super ID",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            Text(text = "Boas vindas ao Super ID!\nDigite seu nome completo:",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 24.sp,
+                color = AppColors.gunmetal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.size(16.dp))
+
+            inputBox(name, { newName -> name = newName }, "Digite seu nome completo")
+
+        }
+    }
+}
+
+@Composable
+fun EmailScreen(navController: NavController, name: String) {
+
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordConfirm by remember { mutableStateOf("") }
 
     //Valores que validam senha e email
     val isEmailValid = remember(email){
         Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
-    val isPasswordValid = passwordValidation(password)
-    var isButtonEnabled by remember { mutableStateOf(true) }
-
-    //Valor utilizado tanto na rolagem da tela, como no tempo para reabilitar o botão
-    val scope = rememberCoroutineScope()
-
-    //Variável para identificar em qual tela/activity está
-    var context = LocalContext.current
-
-    //Valores e funções utilizadas para a rolagem da tela ao clicar em uma TextField
-    val scrollState = rememberScrollState()
-    val focusManager = LocalFocusManager.current
-    var focusedTextFieldOffset by remember { mutableIntStateOf(0) }
-    fun calculateScrollOffset(offsetProvider: () -> Int) {
-        scope.launch {
-            val target = offsetProvider()
-            val visibleArea = scrollState.value + scrollState.viewportSize
-            if (target > visibleArea) {
-                scrollState.animateScrollTo(target)
-            }
-        }
-    }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White)
-            .imePadding(),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.logo_superid_black),
-                            contentDescription = "Logo do Super ID",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(top = 10.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
-            )
-        },
-
-        ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .background(color = Color.White),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(
-                text = "Cadastro",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = AppColors.satinSheenGold
-                ),
-                modifier = Modifier.padding(20.dp)
-            )
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Digite seu Nome") },
+        containerColor = AppColors.white,
+        bottomBar = {
+            Box(
                 modifier = Modifier
-                    .width(300.dp)
-                    .padding(10.dp)
-                    .onGloballyPositioned {
-                        focusedTextFieldOffset = it.positionInParent().y.toInt()
-                    }
-                    .onFocusEvent {
-                        if(it.isFocused){
-                            calculateScrollOffset {
-                                focusedTextFieldOffset
-                            }
-                        }
-                    },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.Black,
-                    focusedBorderColor = Color.Black,
-                    focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black,
-                    focusedTextColor = Color.Black
-                )
-            )
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Button(
+                    onClick = { navController.navigate("password/$name/$email") },
+                    enabled = email.isNotBlank() && isEmailValid,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (email.isNotBlank() && isEmailValid) AppColors.gunmetal else AppColors.jet,
+                        contentColor = AppColors.white
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .height(50.dp)
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Digite seu E-mail") },
-                modifier = Modifier
-                    .width(300.dp)
-                    .padding(start = 10.dp, end = 10.dp)
-                    .onGloballyPositioned {
-                        focusedTextFieldOffset = it.positionInParent().y.toInt()
-                    }
-                    .onFocusEvent {
-                        if(it.isFocused){
-                            calculateScrollOffset {
-                                focusedTextFieldOffset
-                            }
-                        }
-                    },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.Black,
-                    focusedBorderColor = Color.Black,
-                    focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black,
-                    focusedTextColor = Color.Black
-                )
-            )
-
-            if(!isEmailValid && email.isNotEmpty()){
-                Text("Email inválido",
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Digite sua Senha") },
-                modifier = Modifier
-                    .width(300.dp)
-                    .padding(10.dp)
-                    .onGloballyPositioned {
-                        focusedTextFieldOffset = it.positionInParent().y.toInt()
-                    }
-                    .onFocusEvent {
-                        if(it.isFocused){
-                            calculateScrollOffset {
-                                focusedTextFieldOffset
-                            }
-                        }
-                    },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.Black,
-                    focusedBorderColor = Color.Black,
-                    focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black,
-                    focusedTextColor = Color.Black
-                )
-            )
-
-            if(!isPasswordValid && password.isNotEmpty()){
-                Text("A senha deve ter pelo menos 8 caracteres,\numa maiúscula, uma minúscula, um dígito\n e um especial (@#\$%^&+=!).",
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            OutlinedTextField(
-                value = passwordConfirm,
-                onValueChange = { passwordConfirm = it },
-                label = { Text("Confirme sua Senha") },
-                modifier = Modifier
-                    .width(300.dp)
-                    .padding(start = 10.dp, end = 10.dp)
-                    .onGloballyPositioned {
-                        focusedTextFieldOffset = it.positionInParent().y.toInt()
-                    }
-                    .onFocusEvent {
-                        if(it.isFocused){
-                            calculateScrollOffset {
-                                focusedTextFieldOffset
-                            }
-                        }
-                    },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.Black,
-                    focusedBorderColor = Color.Black,
-                    focusedLabelColor = Color.Black,
-                    focusedPlaceholderColor = Color.Black,
-                    focusedTextColor = Color.Black
-                )
-            )
-
-            if(password.isNotEmpty() && passwordConfirm.isNotEmpty()){
-                if(password != passwordConfirm) {
-                    Text("Senhas não coincidem",
-                        color = Color.Red,
-                        style = MaterialTheme.typography.bodySmall
+                ) {
+                    Text(
+                        text = "Avançar",
+                        fontFamily = PoppinsFonts.medium,
+                        fontSize = 12.sp,
+                        color = if (email.isNotBlank() && isEmailValid) AppColors.platinum else AppColors.gunmetal
                     )
                 }
             }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = AppColors.white)
+                .padding((innerPadding)),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    saveNewAccount(name, email, password, context)
-                    isButtonEnabled = false
-                    scope.launch {
-                        delay(5000L)
-                        isButtonEnabled = true
-                    }
-                },
-                enabled = name.isNotEmpty() && email.isNotEmpty()
-                        && isEmailValid && isPasswordValid
-                        && password.isNotEmpty() && passwordConfirm.isNotEmpty()
-                        && password == passwordConfirm
-                        && isButtonEnabled,
-                modifier = Modifier.padding(20.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 48.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(text = "Salvar",
-                    fontSize = 24.sp,
-                    color = Color.White)
+                Icon(
+                    painter = painterResource(R.drawable.logo_superid_darkblue),
+                    contentDescription = "Logo do Super ID",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            Text(
+                text = "Agora, digite seu e-mail:",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 24.sp,
+                color = AppColors.gunmetal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.size(16.dp))
+
+            inputBox(email, { newEmail -> email = newEmail }, "Digite seu e-mail")
+
+        }
+    }
+}
+
+@Composable
+fun PasswordScreen(navController: NavController, name: String, email: String) {
+
+    var password by remember { mutableStateOf("") }
+    var passwordConfirm by remember { mutableStateOf("") }
+    val passwordRequirements = checkPasswordRequirements(password)
+    val context = LocalContext.current
+
+    val isPasswordValid = passwordRequirements.hasDigit &&
+            passwordRequirements.hasUppercase &&
+            passwordRequirements.hasLowerCase &&
+            passwordRequirements.hasSpecialChar &&
+            passwordRequirements.hasMinLength
+
+
+    Scaffold(
+        containerColor = AppColors.white,
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Button(
+                    onClick = { saveNewAccount(name,email,password,context) },
+                    enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (password.isNotBlank() && isPasswordValid && password == passwordConfirm) AppColors.gunmetal else AppColors.jet,
+                        contentColor = AppColors.white
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .height(50.dp)
+
+                ) {
+                    Text(
+                        text = "Criar conta",
+                        fontFamily = PoppinsFonts.medium,
+                        fontSize = 12.sp,
+                        color = if (password.isNotBlank() && isPasswordValid && password == passwordConfirm) AppColors.platinum else AppColors.gunmetal
+                    )
+                }
             }
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = AppColors.white)
+                .padding((innerPadding)),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.logo_superid_darkblue),
+                    contentDescription = "Logo do Super ID",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            Text(
+                text = "Agora, digite sua senha:",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 24.sp,
+                color = AppColors.gunmetal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.size(16.dp))
+
+            inputBox(password, { newPassword -> password = newPassword }, "Digite sua senha")
+
+            Spacer(modifier = Modifier.size(16.dp))
+
+            Text(
+                text = "Confirme sua senha:",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 24.sp,
+                color = AppColors.gunmetal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.size(16.dp))
+
+            inputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
+
+            if(password.isNotBlank()){
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
+                    RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
+                    RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
+                    RequirementItem("1 número",passwordRequirements.hasDigit)
+                    RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
+                }
+            }
+        }
+    }
+}
+
+//Função composable que gera os requerimentos da senha
+@Composable
+fun RequirementItem(text: String, isChecked: Boolean){
+    Row(verticalAlignment = Alignment.CenterVertically){
+        Checkbox(
+            checked = isChecked,
+            enabled = false,
+            onCheckedChange = null,
+            colors = CheckboxDefaults.colors(
+                checkedColor = AppColors.gunmetal,
+                uncheckedColor = AppColors.jet
+            )
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = if (isChecked) AppColors.gunmetal else AppColors.jet,
+            fontFamily = PoppinsFonts.regular
+        )
     }
 }
