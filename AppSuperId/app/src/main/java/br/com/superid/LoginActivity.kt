@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -102,39 +104,30 @@ fun login(modifier: Modifier = Modifier){
     var senha by remember { mutableStateOf("") }
     var context = LocalContext.current
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.logo_superid_darkblue),
-                            contentDescription = "Logo do Super ID",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .padding(top = 10.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.white
-                )
-            )
-        },
-    ) { paddingValues ->
     Column(
         modifier = Modifier
-            .padding(paddingValues)
             .fillMaxSize()
             .background(color = AppColors.white),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     )
     {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 48.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.logo_superid_darkblue),
+                contentDescription = "Logo do Super ID",
+                modifier = Modifier
+                    .size(100.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(80.dp))
+
         Text(text = "Bem-vindo de volta! \nDigite seu e-mail e senha:",
             fontFamily = PoppinsFonts.medium,
             fontSize = 24.sp,
@@ -146,45 +139,16 @@ fun login(modifier: Modifier = Modifier){
 
         Spacer(modifier = Modifier.size(10.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Digite seu Email") },
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black
-            )
-        )
+        inputBox(email, { newEmail -> email = newEmail }, "Digite seu e-mail")
 
-        OutlinedTextField(
-            value = senha,
-            onValueChange = { senha = it },
-            label = { Text("Digite sua senha") },
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black
-            )
-        )
+        inputBox(senha, { newSenha -> senha = newSenha }, "Digite sua senha")
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(180.dp))
 
         Button(
             onClick = {
                 loginAuth(email,senha,context)
             },
-            enabled = email.isNotEmpty() && senha.isNotEmpty(),
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .width(300.dp)
@@ -194,11 +158,36 @@ fun login(modifier: Modifier = Modifier){
             ),
         ) {
             Text(text = "Entrar",
-                fontSize = 24.sp,
-                color = Color.White
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 30.sp,
+                color = AppColors.platinum
             )
         }
 
     }
- }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
+    TextField(
+        value = variavel,
+        onValueChange = onValueChange,
+        label = {
+            Text(text = texto,
+                fontSize = 12.sp,
+                fontFamily = PoppinsFonts.regular
+            )},
+        modifier = Modifier
+            .width(300.dp)
+            .padding(10.dp),
+        singleLine = true,
+        colors = TextFieldDefaults.textFieldColors(
+            focusedIndicatorColor = AppColors.gunmetal,
+            unfocusedIndicatorColor = AppColors.platinum,
+            containerColor = Color.Transparent,
+            focusedLabelColor = AppColors.gunmetal,
+            cursorColor = AppColors.gunmetal
+        )
+    )
 }
