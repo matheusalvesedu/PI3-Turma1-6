@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -124,12 +126,15 @@ fun PreviewSignUp(){
 fun SignUpFlow(){
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "name") {
+
         composable("name") { NameScreen(navController) }
+
         composable("email/{name}") { entry ->
             entry.arguments?.getString("name")?.let { name ->
                 EmailScreen(navController,name)
             }
         }
+
         composable("password/{name}/{email}") { entry->
             entry.arguments?.getString("name")?.let { name ->
                 entry.arguments?.getString("email")?.let{email ->
@@ -153,9 +158,11 @@ fun NameScreen(navController: NavController){
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .imePadding(),
                 contentAlignment = Alignment.CenterEnd
             ){
+
                 Button(
                     onClick = { navController.navigate("email/$name") },
                     enabled = name.isNotBlank(),
@@ -236,7 +243,8 @@ fun EmailScreen(navController: NavController, name: String) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .imePadding(),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
@@ -319,14 +327,14 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             passwordRequirements.hasSpecialChar &&
             passwordRequirements.hasMinLength
 
-
     Scaffold(
         containerColor = AppColors.white,
         bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .imePadding(),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
