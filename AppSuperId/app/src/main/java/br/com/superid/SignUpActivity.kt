@@ -395,7 +395,8 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .imePadding(),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
