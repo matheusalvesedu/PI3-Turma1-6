@@ -128,6 +128,7 @@ fun createUser(name: String, email: String, password: String, context: Context) 
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if(task.isSuccessful){
+
                 val user = auth.currentUser
 
                 saveNewAccountToDB(user,name,email)
@@ -394,8 +395,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .imePadding(),
+                    .padding(16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
