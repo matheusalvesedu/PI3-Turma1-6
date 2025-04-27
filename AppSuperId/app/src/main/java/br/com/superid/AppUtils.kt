@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.AppColors
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 // Função para transicionar entre as telas
 fun mudarTela(context: Context, destination: Class<*>){

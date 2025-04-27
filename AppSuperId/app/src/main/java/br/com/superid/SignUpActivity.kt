@@ -49,9 +49,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import org.checkerframework.checker.units.qual.C
 
 
 class SignUpActivity : ComponentActivity() {
@@ -84,34 +87,57 @@ fun checkPasswordRequirements(password: String): PasswordRequirements{
     )
 }
 
-fun saveNewAccount(name: String, email: String, password: String, context: Context) {
-    val auth = Firebase.auth
+fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
+
     val db = Firebase.firestore
+
+    val userAccount = hashMapOf(
+        "name" to name,
+        "email" to email,
+        "firstAccess" to "true"
+    )
+
+    db.collection("accounts").document(user!!.uid).set(userAccount)
+        .addOnSuccessListener{
+            Log.d("Firestore", "Informações da conta salva com sucesso!")
+        }
+        .addOnFailureListener{ e ->
+            Log.e("Firestore", "Erro ao salvar as Informações da conta", e)
+        }
+
+}
+
+
+fun sendEmailVerification(user: FirebaseUser?, context: Context){
+
+    user?.sendEmailVerification()
+        ?.addOnCompleteListener { task ->
+            if(task.isSuccessful){
+                Log.i( "EmailVerification","Email de verificação enviado com sucesso!! ")
+            }else{
+                Log.i("EmailVerification", "Email de verificação falhou ao ser enviado -> ${task.exception} ")
+            }
+        }
+
+}
+
+fun createUser(name: String, email: String, password: String, context: Context) {
+
+    val auth = Firebase.auth
+
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if(task.isSuccessful){
                 val user = auth.currentUser
-                val userAccount = hashMapOf(
-                    "name" to name,
-                    "email" to email
-                )
-                db.collection("accounts").document(user!!.uid).set(userAccount)
-                    .addOnSuccessListener{
-                        Log.d("Firestore", "Conta salva com sucesso!")
-                    }
-                    .addOnFailureListener{ e ->
-                        Log.e("Firestore", "Erro ao salvar a conta", e)
-                    }
-                Toast.makeText(context, "Cadastro realizado!", Toast.LENGTH_SHORT).show()
-                mudarTela(context, LoginActivity::class.java)
 
-                Log.i("CREATION-TEST", "ID do novo usuário: ${user.uid}")
+                saveNewAccountToDB(user,name,email)
+                sendEmailVerification(user,context)
+                Log.i("CREATION-TEST", "Usuario criado com sucesso UID -> ${user?.uid} ")
             } else {
                 Log.i("CREATION-TEST", "Usuário não criado.")
                 task.exception?.let { e ->
                     Log.e("CREATION-ERROR", "Erro ao criar usuário", e)
                 }
-                Toast.makeText(context, "Erro: Cadastro não realizado", Toast.LENGTH_LONG).show()
             }
         }
 }
@@ -137,14 +163,47 @@ fun SignUpFlow(){
 
         composable("password/{name}/{email}") { entry->
             entry.arguments?.getString("name")?.let { name ->
-                entry.arguments?.getString("email")?.let{email ->
+                entry.arguments?.getString("email")?.let{ email ->
                     PasswordScreen(navController,name,email)
                 }
             }
 
         }
+
+        composable("verification/{name}/{email}"){ entry ->
+            entry.arguments?.getString("name")?.let { name->
+                entry.arguments?.getString("email")?.let{ email ->
+                    VerificationScreen(navController,name,email)
+                }
+            }
+        }
     }
 
+}
+
+//Função composable que gera os requerimentos da senha
+@Composable
+fun RequirementItem(text: String, isChecked: Boolean){
+    Row(verticalAlignment = Alignment.CenterVertically){
+        Checkbox(
+            checked = isChecked,
+            enabled = false,
+            onCheckedChange = null,
+            colors = CheckboxDefaults.colors(
+                checkedColor = AppColors.gunmetal,
+                uncheckedColor = AppColors.jet
+            )
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = if (isChecked) AppColors.gunmetal else AppColors.jet,
+            fontFamily = PoppinsFonts.regular
+        )
+    }
 }
 
 @Composable
@@ -319,6 +378,8 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     var password by remember { mutableStateOf("") }
     var passwordConfirm by remember { mutableStateOf("") }
     val passwordRequirements = checkPasswordRequirements(password)
+
+    var loading by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val isPasswordValid = passwordRequirements.hasDigit &&
@@ -338,7 +399,10 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
-                    onClick = { saveNewAccount(name,email,password,context) },
+                    onClick = {
+                        createUser(name,email,password,context)
+                        navController.navigate("verification/$name/$email")
+                    },
                     enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (password.isNotBlank() && isPasswordValid && password == passwordConfirm) AppColors.gunmetal else AppColors.jet,
@@ -431,27 +495,45 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     }
 }
 
-//Função composable que gera os requerimentos da senha
 @Composable
-fun RequirementItem(text: String, isChecked: Boolean){
-    Row(verticalAlignment = Alignment.CenterVertically){
-        Checkbox(
-            checked = isChecked,
-            enabled = false,
-            onCheckedChange = null,
-            colors = CheckboxDefaults.colors(
-                checkedColor = AppColors.gunmetal,
-                uncheckedColor = AppColors.jet
-            )
-        )
+fun VerificationScreen(navController: NavController, name: String, email: String){
 
-        Spacer(modifier = Modifier.width(8.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = AppColors.white),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 48.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.logo_superid_darkblue),
+                contentDescription = "Logo do Super ID",
+                modifier = Modifier
+                    .size(100.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(60.dp))
 
         Text(
-            text = text,
-            fontSize = 14.sp,
-            color = if (isChecked) AppColors.gunmetal else AppColors.jet,
-            fontFamily = PoppinsFonts.regular
+            text = "Verifique sua conta",
+            fontFamily = PoppinsFonts.medium,
+            fontSize = 24.sp,
+            color = AppColors.gunmetal,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(10.dp)
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
     }
 }
+
