@@ -18,6 +18,7 @@
             android:theme="@style/Theme.SuperID" />
         <activity
             android:name=".SignUpActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false"
             android:label="@string/title_activity_sign_up"
             android:theme="@style/Theme.SuperID" />

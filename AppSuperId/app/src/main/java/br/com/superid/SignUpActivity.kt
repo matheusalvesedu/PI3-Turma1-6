@@ -1,5 +1,7 @@
 package br.com.superid
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -21,22 +23,34 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -106,7 +120,6 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
         }
 
 }
-
 
 fun sendEmailVerification(user: FirebaseUser?, context: Context){
 
@@ -196,30 +209,36 @@ fun RequirementItem(text: String, isChecked: Boolean){
             )
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
         Text(
             text = text,
-            fontSize = 14.sp,
+            fontSize = 8.sp,
             color = if (isChecked) AppColors.gunmetal else AppColors.jet,
             fontFamily = PoppinsFonts.regular
         )
     }
 }
 
+@SuppressLint("ContextCastToActivity")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NameScreen(navController: NavController){
 
     var name by remember { mutableStateOf("") }
+    var activity = LocalContext.current as? Activity
+    var context = LocalContext.current
 
     Scaffold(
         containerColor = AppColors.white,
+        topBar = {
+            activityBackButton(activity)
+        },
         bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .imePadding(),
+                    .padding(16.dp),
                 contentAlignment = Alignment.CenterEnd
             ){
 
@@ -256,8 +275,7 @@ fun NameScreen(navController: NavController){
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 48.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -291,6 +309,7 @@ fun NameScreen(navController: NavController){
 fun EmailScreen(navController: NavController, name: String) {
 
     var email by remember { mutableStateOf("") }
+    var context = LocalContext.current
 
     //Valores que validam senha e email
     val isEmailValid = remember(email){
@@ -299,12 +318,14 @@ fun EmailScreen(navController: NavController, name: String) {
 
     Scaffold(
         containerColor = AppColors.white,
+        topBar = {
+            screenBackButton(navController, context)
+        },
         bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .imePadding(),
+                    .padding(16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Button(
@@ -341,8 +362,7 @@ fun EmailScreen(navController: NavController, name: String) {
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 48.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -380,8 +400,18 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     var passwordConfirm by remember { mutableStateOf("") }
     val passwordRequirements = checkPasswordRequirements(password)
 
-    var loading by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Delay visual na criação de conta
+    var shouldNavigate by remember { mutableStateOf(false) }
+    LaunchedEffect(shouldNavigate) {
+        if(shouldNavigate){
+            kotlinx.coroutines.delay(1500)
+            navController.navigate("verification/$name/$email")
+        }
+    }
 
     val isPasswordValid = passwordRequirements.hasDigit &&
             passwordRequirements.hasUppercase &&
@@ -391,44 +421,16 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
     Scaffold(
         containerColor = AppColors.white,
-        bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .imePadding(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Button(
-                    onClick = {
-                        createUser(name,email,password,context)
-                        navController.navigate("verification/$name/$email")
-                    },
-                    enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (password.isNotBlank() && isPasswordValid && password == passwordConfirm) AppColors.gunmetal else AppColors.jet,
-                        contentColor = AppColors.white
-                    ),
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .height(50.dp)
-
-                ) {
-                    Text(
-                        text = "Criar conta",
-                        fontFamily = PoppinsFonts.medium,
-                        fontSize = 12.sp,
-                        color = if (password.isNotBlank() && isPasswordValid && password == passwordConfirm) AppColors.platinum else AppColors.gunmetal
-                    )
-                }
-            }
+        topBar = {
+            screenBackButton(navController, context)
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = AppColors.white)
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding((innerPadding)),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -436,8 +438,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 48.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -490,6 +491,46 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                     RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
                     RequirementItem("1 número",passwordRequirements.hasDigit)
                     RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            Button(
+                onClick = {
+                    isLoading = true
+                    createUser(name,email,password,context)
+                    shouldNavigate = true
+                },
+                enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (password.isNotBlank() &&
+                                        isPasswordValid &&
+                                        !shouldNavigate &&
+                                        password == passwordConfirm) AppColors.gunmetal else AppColors.jet,
+                    contentColor = AppColors.white
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .width(300.dp)
+                    .height(60.dp)
+            ) {
+                if(isLoading) {
+                    CircularProgressIndicator(
+                        color = AppColors.white,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Criar conta",
+                        fontFamily = PoppinsFonts.medium,
+                        fontSize = 30.sp,
+                        color = if (password.isNotBlank() &&
+                                    isPasswordValid &&
+                                    !shouldNavigate &&
+                                    password == passwordConfirm) AppColors.platinum else AppColors.gunmetal
+                    )
                 }
             }
         }

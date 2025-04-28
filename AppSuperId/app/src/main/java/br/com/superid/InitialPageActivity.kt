@@ -91,7 +91,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 48.dp),
+                .padding(top = 80.dp),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -133,7 +133,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                 fontSize = 30.sp,
                 color = AppColors.platinum)
         }
-        
+
         Spacer (modifier = Modifier.height(10.dp))
 
         OutlinedButton(
