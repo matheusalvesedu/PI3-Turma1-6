@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -68,13 +70,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import io.github.cdimascio.dotenv.dotenv
-import org.checkerframework.checker.units.qual.C
-import java.util.Base64
-import javax.crypto.Cipher
-import javax.crypto.SecretKey
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
+import kotlinx.coroutines.delay
 
 
 class SignUpActivity : ComponentActivity() {
@@ -197,6 +193,9 @@ fun SignUpFlow(){
                 }
             }
         }
+
+        composable("home"){HomeScreen(navController)}
+
     }
 
 }
@@ -231,8 +230,7 @@ fun RequirementItem(text: String, isChecked: Boolean){
 fun NameScreen(navController: NavController){
 
     var name by remember { mutableStateOf("") }
-    var activity = LocalContext.current as? Activity
-    var context = LocalContext.current
+    val activity = LocalContext.current as? Activity
 
     Scaffold(
         containerColor = AppColors.white,
@@ -324,7 +322,7 @@ fun EmailScreen(navController: NavController, name: String) {
     Scaffold(
         containerColor = AppColors.white,
         topBar = {
-            screenBackButton(navController, context)
+            ScreenBackButton(navController, context)
         },
         bottomBar = {
             Box(
@@ -427,7 +425,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     Scaffold(
         containerColor = AppColors.white,
         topBar = {
-            screenBackButton(navController, context)
+            ScreenBackButton(navController, context)
         }
     ) { innerPadding ->
         Column(
@@ -546,6 +544,27 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 @Composable
 fun VerificationScreen(navController: NavController, name: String, email: String){
 
+    var isVerified by remember { mutableStateOf(false) }
+    val auth = Firebase.auth
+
+    LaunchedEffect(true) {
+        while(!isVerified){
+
+            val user = auth.currentUser
+
+            user?.reload()
+            if(user?.isEmailVerified == true){
+                isVerified = true
+                delay(1500)
+                navController.navigate("home")
+            }
+
+            delay(3000)
+
+        }
+
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -571,7 +590,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
         Spacer(modifier = Modifier.height(60.dp))
 
         Text(
-            text = "Verifique sua conta",
+            text = "Verificação de endereço de e-mail",
             fontFamily = PoppinsFonts.medium,
             fontSize = 24.sp,
             color = AppColors.gunmetal,
@@ -580,8 +599,52 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 .padding(10.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        if(!isVerified){
+            Text(
+                text = "Aguardando a verificação do e-mail...",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 16.sp,
+                color = AppColors.gunmetal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.size(25.dp))
+
+            CircularProgressIndicator(
+                color = AppColors.gunmetal,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(50.dp)
+            )
+
+        }else{
+
+            Text(
+                text = "E-mail verificado!!",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 16.sp,
+                color = AppColors.gunmetal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.size(25.dp))
+
+            Icon(
+                imageVector = Icons.Default.CheckCircleOutline,
+                contentDescription = "Verificado",
+                tint = AppColors.gunmetal,
+                modifier = Modifier.size(50.dp)
+            )
+
+        }
 
     }
 }
 
+@Composable
+fun HomeScreen(navController: NavController){
+    Text("teste")
+}

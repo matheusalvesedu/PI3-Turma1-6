@@ -140,7 +140,7 @@ fun activityBackButton(activity: Activity?){
 // Botão para voltar telas dentro de uma única activity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun screenBackButton(navController: NavController,context: Context){
+fun ScreenBackButton(navController: NavController,context: Context){
     TopAppBar(
         modifier = Modifier.height(80.dp),
         colors = TopAppBarDefaults.topAppBarColors(
