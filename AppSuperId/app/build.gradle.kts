@@ -82,4 +82,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
 
+    // libs de ícones
+    implementation(libs.androidx.material.icons.extended)
+
+    // libs do .env
+    implementation(libs.dotenv.kotlin)
+
 }

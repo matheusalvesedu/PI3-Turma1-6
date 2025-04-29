@@ -68,7 +68,13 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import io.github.cdimascio.dotenv.dotenv
 import org.checkerframework.checker.units.qual.C
+import java.util.Base64
+import javax.crypto.Cipher
+import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 
 class SignUpActivity : ComponentActivity() {
@@ -221,7 +227,6 @@ fun RequirementItem(text: String, isChecked: Boolean){
 }
 
 @SuppressLint("ContextCastToActivity")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NameScreen(navController: NavController){
 
@@ -463,7 +468,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            inputBox(password, { newPassword -> password = newPassword }, "Digite sua senha")
+            passwordInputBox(password, { newPassword -> password = newPassword }, "Digite sua senha")
 
             Spacer(modifier = Modifier.size(16.dp))
 
@@ -479,7 +484,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            inputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
+            passwordInputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
 
             if(password.isNotBlank()){
                 Column(
@@ -494,7 +499,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Button(
                 onClick = {
@@ -513,7 +518,8 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .width(300.dp)
-                    .height(60.dp)
+                    .height(80.dp)
+                    .padding(bottom = 20.dp)
             ) {
                 if(isLoading) {
                     CircularProgressIndicator(
