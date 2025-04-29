@@ -77,6 +77,8 @@ dependencies {
 
     // libs do Auth
     implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
 
 }
