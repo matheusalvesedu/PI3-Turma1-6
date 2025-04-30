@@ -2,6 +2,7 @@ package br.com.superid
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +12,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,10 +27,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -40,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
@@ -56,6 +61,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -215,6 +221,70 @@ fun SignUpFlow(){
 
 }
 
+@Composable
+fun CheckBoxTermosUso(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+){
+
+    var showPopUp by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = AppColors.gunmetal,
+                uncheckedColor = AppColors.jet
+            ),
+        )
+
+        Text(
+            text = "Ao prosseguir você concorda com os termos de uso do app.",
+            fontFamily = PoppinsFonts.medium,
+            fontSize = 10.sp,
+            textDecoration = TextDecoration.Underline,
+            color = AppColors.gunmetal,
+            modifier = Modifier
+                .clickable { showPopUp = true }
+        )
+
+        if(showPopUp){
+            AlertDialog(
+                onDismissRequest = {showPopUp = false},
+                title = { Text("Termos de Uso") },
+                text = { Text("Bem-vindo ao SuperID!\n" +
+                        "\n" +
+                        "Este aplicativo foi desenvolvido com fins educacionais no âmbito do Projeto Integrador 3 da PUC-Campinas. Ao utilizar o SuperID, você concorda com os seguintes termos:\n" +
+                        "\n" +
+                        "1. O SuperID é um gerenciador de autenticações que permite a criação de contas, armazenamento seguro de senhas e login sem senha.\n" +
+                        "2. Seus dados (nome, e-mail, UID e IMEI do dispositivo) são armazenados no Firebase de forma segura e com fins acadêmicos.\n" +
+                        "3. As senhas cadastradas são criptografadas e associadas a tokens únicos.\n" +
+                        "4. O aplicativo pode ser usado para login em sites parceiros, utilizando QR Code e autenticação segura.\n" +
+                        "5. A redefinição da senha mestre depende da validação do seu e-mail.\n" +
+                        "6. Este app não atende a padrões avançados de segurança da informação e **não deve ser usado em ambientes reais** ou com dados sensíveis fora do contexto educacional.\n" +
+                        "7. Ao criar sua conta, você declara estar ciente de que o uso do app é exclusivamente acadêmico e que seus dados podem ser apagados ao fim do semestre letivo.\n" +
+                        "\n" +
+                        "Para mais informações, entre em contato com a equipe de desenvolvimento ou os professores responsáveis pelo projeto.\n" +
+                        "\n" +
+                        "PUC-Campinas - Engenharia de Software") },
+                confirmButton = {
+                    TextButton(onClick = { showPopUp = false }) {
+                        Text("Fechar", color = AppColors.gunmetal)
+                    }
+                },
+                modifier = Modifier.background(color = AppColors.white)
+            )
+        }
+    }
+}
+
 //Função composable que gera os requerimentos da senha
 @Composable
 fun RequirementItem(text: String, isChecked: Boolean){
@@ -226,7 +296,8 @@ fun RequirementItem(text: String, isChecked: Boolean){
             colors = CheckboxDefaults.colors(
                 checkedColor = AppColors.gunmetal,
                 uncheckedColor = AppColors.jet
-            )
+            ),
+            modifier = Modifier.size(6.dp)
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -417,7 +488,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     var password by remember { mutableStateOf("") }
     var passwordConfirm by remember { mutableStateOf("") }
     val passwordRequirements = checkPasswordRequirements(password)
-
+    var termosAceitos by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     var isLoading by remember { mutableStateOf(false) }
@@ -485,18 +556,6 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            Text(
-                text = "Confirme sua senha:",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 24.sp,
-                color = AppColors.gunmetal,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(10.dp)
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
             passwordInputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
 
             if(password.isNotBlank()){
@@ -512,7 +571,14 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.size(16.dp))
+
+            CheckBoxTermosUso(
+                termosAceitos,
+                onCheckedChange = {termosAceitos = it}
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Button(
                 onClick = {
@@ -530,12 +596,13 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                     )
 
                 },
-                enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm,
+                enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm && termosAceitos,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (password.isNotBlank() &&
                                         isPasswordValid &&
                                         !shouldNavigate &&
-                                        password == passwordConfirm) AppColors.gunmetal else AppColors.jet,
+                                        password == passwordConfirm &&
+                                        termosAceitos) AppColors.gunmetal else AppColors.jet,
                     contentColor = AppColors.white
                 ),
                 modifier = Modifier
@@ -558,7 +625,8 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         color = if (password.isNotBlank() &&
                                     isPasswordValid &&
                                     !shouldNavigate &&
-                                    password == passwordConfirm) AppColors.platinum else AppColors.gunmetal
+                                    password == passwordConfirm &&
+                                    termosAceitos) AppColors.platinum else AppColors.gunmetal
                     )
                 }
             }
