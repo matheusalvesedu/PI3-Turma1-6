@@ -136,7 +136,14 @@ fun sendEmailVerification(user: FirebaseUser?, context: Context){
 
 }
 
-fun createUser(name: String, email: String, password: String, context: Context) {
+fun createUser(
+    name: String,
+    email: String,
+    password: String,
+    context: Context,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
 
     val auth = Firebase.auth
 
@@ -148,8 +155,16 @@ fun createUser(name: String, email: String, password: String, context: Context) 
 
                 saveNewAccountToDB(user,name,email)
                 sendEmailVerification(user,context)
+                onSuccess()
+
                 Log.i("CREATION-TEST", "Usuario criado com sucesso UID -> ${user?.uid} ")
             } else {
+
+                val exception = task.exception
+                if (exception != null) {
+                    onFailure(exception)
+                }
+
                 Log.i("CREATION-TEST", "Usuário não criado.")
                 task.exception?.let { e ->
                     Log.e("CREATION-ERROR", "Erro ao criar usuário", e)
@@ -502,8 +517,18 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             Button(
                 onClick = {
                     isLoading = true
-                    createUser(name,email,password,context)
-                    shouldNavigate = true
+                    createUser(
+                        name,
+                        email,
+                        password,
+                        context,
+                        onSuccess = {shouldNavigate = true},
+                        onFailure = {e ->
+                            isLoading = false
+                            Toast.makeText(context, "Erro: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        }
+                    )
+
                 },
                 enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm,
                 colors = ButtonDefaults.buttonColors(
