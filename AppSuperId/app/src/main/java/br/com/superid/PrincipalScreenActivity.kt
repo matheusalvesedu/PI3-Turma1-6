@@ -28,9 +28,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
@@ -42,6 +41,9 @@ import androidx.compose.ui.draw.clip
 import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Close
 
 class PrincipalScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +92,7 @@ fun Screen(modifier: Modifier = Modifier) {
     val backgroundColor = if (darkMode) AppColors.gunmetal else Color.White // cor escura ou clara
 
     // Definir a cor do botão + com base no estado do darkMode
-    val buttonColor = if (darkMode) AppColors.satinSheenGold else AppColors.platinum // Exemplo de cores: azul escuro e laranja
+    val buttonColor = if (darkMode) AppColors.satinSheenGold else AppColors.platinum
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -112,7 +114,7 @@ fun Screen(modifier: Modifier = Modifier) {
                             }
                         }
                     },
-                    darkMode = darkMode, // Passando o estado do darkMode para TopBar
+                    darkMode = darkMode, // Passa o estado do darkMode para TopBar
                     onDarkModeChange = { darkMode = it } // Função para alterar o darkMode
                 )
             },
@@ -227,10 +229,16 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
             bottom = 16.dp
         )
     ) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            RowFilter() // Chama a os Filtros
+            Spacer(modifier = Modifier.height(8.dp))
+        }
         items(10) { index ->
             CardItem(
                 title = "Título do Card ${index + 1}",
-                description = "Esta é a descrição do card número ${index + 1}.",
+                user = "User : email${index + 1}@gmail.com",
+                password = "Password : ******* do Card ${index + 1}",
                 darkMode = darkMode
             )
         }
@@ -238,7 +246,7 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
 }
 
 @Composable
-fun CardItem(title: String, description: String, darkMode: Boolean) {
+fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -252,22 +260,51 @@ fun CardItem(title: String, description: String, darkMode: Boolean) {
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
+                )
+
+                Spacer(modifier = Modifier.width(90.dp)) // Ajustado o espaço aqui
+
+                Box(
+                    modifier = Modifier
+                        .size(24.dp) // Tamanho do círculo
+                        .background(
+                            color = AppColors.platinum, // Colocar cor do Filtro
+                            shape = CircleShape
+                        )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = title,
+                text = user,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
+                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                modifier = Modifier.padding(start = 16.dp)
             )
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
+                text = password,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                modifier = Modifier.padding(start = 16.dp)
             )
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -409,3 +446,92 @@ fun DropdownMenuWithDetails(
         )
     }
 }
+
+@Composable
+fun RowFilter() {
+    val filtros = remember {
+        mutableStateListOf(
+            "Entretenimento" to Color(0xFFD1A740),
+            "Faculdade" to Color(0xFF38C5D9),
+            "Lazer" to Color(0xFF9C27B0),
+            "Saúde" to Color(0xFF4CAF50),
+            "Trabalho" to Color(0xFFFF9800),
+            "Sem Filtro" to Color(0xFFFFFFFF)
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LazyRow(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(end = 8.dp)
+        ) {
+            items(filtros, key = { it.first }) { filtro ->
+                Filter(
+                    text = filtro.first,
+                    backgroundColor = filtro.second,
+                    onRemove = {
+                        if (filtro.first != "Sem Filtro") {
+                            filtros.remove(filtro)
+                        }
+                    },
+                    canBeRemoved = filtro.first != "Sem Filtro"
+                )
+            }
+        }
+
+        IconButton(
+            onClick = { /* ação do botão + */ },
+            modifier = Modifier
+                .size(32.dp)
+                .background(Color(0xFFE0E0E0), shape = CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Adicionar filtro",
+                tint = Color.Black,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun Filter(
+    text: String,
+    backgroundColor: Color,
+    onRemove: () -> Unit,
+    canBeRemoved: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(backgroundColor)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = text, color = Color.Black)
+            if (canBeRemoved) {
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remover filtro",
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onRemove() }
+                )
+            }
+        }
+    }
+}
+
+
