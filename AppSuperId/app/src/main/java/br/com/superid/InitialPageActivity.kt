@@ -153,5 +153,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
                 color = AppColors.gunmetal
             )
         }
+
+
     }
 }

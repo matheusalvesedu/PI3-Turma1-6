@@ -18,16 +18,21 @@
             android:label="@string/title_activity_principal_screen"
             android:theme="@style/Theme.SuperID" />
         <activity
+            android:name=".PasswordRecoveryActivity"
+            android:exported="false"
+            android:label="@string/title_activity_change_password"
+            android:theme="@style/Theme.SuperID" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.SuperID" />
         <activity
             android:name=".SignUpActivity"
-            android:windowSoftInputMode="adjustResize"
             android:exported="false"
             android:label="@string/title_activity_sign_up"
-            android:theme="@style/Theme.SuperID" />
+            android:theme="@style/Theme.SuperID"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".InitialPageActivity"
             android:exported="true"
@@ -35,7 +40,6 @@
             android:theme="@style/Theme.SuperID">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
