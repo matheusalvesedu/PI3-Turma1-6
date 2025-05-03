@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +58,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.SuperIDTheme
+import br.com.superid.ui.theme.AppColors
+import br.com.superid.PoppinsFonts
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -101,99 +106,65 @@ fun login(modifier: Modifier = Modifier){
     var senha by remember { mutableStateOf("") }
     var context = LocalContext.current
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.logo_superid_black),
-                            contentDescription = "Logo do Super ID",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(top = 10.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
-            )
-        },
-    ) { paddingValues ->
     Column(
         modifier = Modifier
-            .padding(paddingValues)
             .fillMaxSize()
-            .background(color = Color.White),
-        verticalArrangement = Arrangement.Center,
+            .background(color = AppColors.white),
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     )
     {
-        Text(text = "Login",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            ),
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 48.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.logo_superid_darkblue),
+                contentDescription = "Logo do Super ID",
+                modifier = Modifier
+                    .size(100.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(80.dp))
+
+        Text(text = "Bem-vindo de volta! \nDigite seu e-mail e senha:",
+            fontFamily = PoppinsFonts.medium,
+            fontSize = 24.sp,
+            color = AppColors.gunmetal,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(10.dp)
         )
+
         Spacer(modifier = Modifier.size(10.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Digite seu Email") },
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black
-            )
-        )
+        inputBox(email, { newEmail -> email = newEmail }, "Digite seu e-mail")
 
-        OutlinedTextField(
-            value = senha,
-            onValueChange = { senha = it },
-            label = { Text("Digite sua senha") },
-            modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                focusedTextColor = Color.Black
-            )
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        inputBox(senha, { newSenha -> senha = newSenha }, "Digite sua senha")
+
+        Spacer(modifier = Modifier.height(180.dp))
 
         Button(
             onClick = {
                 loginAuth(email,senha,context)
             },
-            enabled = email.isNotEmpty() && senha.isNotEmpty(),
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(300.dp)
+                .height(60.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black
-            )
+                containerColor = AppColors.gunmetal
+            ),
         ) {
             Text(text = "Entrar",
-                fontSize = 24.sp,
-                color = Color.White
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 30.sp,
+                color = AppColors.platinum
             )
         }
 
     }
- }
 }

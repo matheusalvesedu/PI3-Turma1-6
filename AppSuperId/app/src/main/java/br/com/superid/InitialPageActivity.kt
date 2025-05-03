@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.PoppinsFonts
+import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 
 
@@ -77,87 +79,79 @@ fun TelaInicialApp(){
 fun TelaInicial(modifier: Modifier = Modifier){
     var context = LocalContext.current
     var presses by remember { mutableStateOf(0)}
-    Scaffold(
-        modifier = Modifier.fillMaxSize().background(color = Color.White),
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.logo_superid_black),
-                                contentDescription = "Logo do Super ID",
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .padding(top = 10.dp)
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White
-                    )
-                )
-            },
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .fillMaxWidth()
+            .background(color = AppColors.white),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
 
-        ) { paddingValues ->
-            Column(
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 80.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.logo_superid_darkblue),
+                contentDescription = "Logo do Super ID",
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .fillMaxWidth()
-                    .background(color = Color.White),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .size(100.dp)
+            )
+        }
 
-            ) {
-                Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(100.dp))
 
-                Text(text = "O gerenciador\nde senhas\nmais seguro\ndo mercado.",
-                    fontFamily = PoppinsFonts.bold,
-                    fontSize = 30.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(30.dp)
-                )
+        Text(text = "O gerenciador\nde senhas\nmais seguro\ndo mercado.",
+            fontFamily = PoppinsFonts.bold,
+            fontSize = 30.sp,
+            lineHeight = 30.sp,
+            color = AppColors.gunmetal,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(30.dp)
+        )
 
-                Spacer(modifier = Modifier.height(150.dp))
+        Spacer(modifier = Modifier.height(180.dp))
 
-                Button(
-                    onClick = {
-                        mudarTela(context, SignUpActivity::class.java)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .width(300.dp)
-                        .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black
-                    )
-                ) {
-                    Text("Criar conta",
-                        fontFamily = PoppinsFonts.regular,
-                        fontSize = 20.sp,
-                        color = Color.White)
-                }
-                Spacer (modifier = Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = {
-                        mudarTela(context, LoginActivity::class.java)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .width(300.dp)
-                        .height(60.dp)
-                ) {
-                    Text("Já tenho uma conta",
-                        fontFamily = PoppinsFonts.regular,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
-                }
-            }
+        Button(
+            onClick = {
+                mudarTela(context, SignUpActivity::class.java)
+            },
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(300.dp)
+                .height(60.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AppColors.gunmetal
+            )
+        ) {
+            Text("Cadastre-se",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 30.sp,
+                color = AppColors.platinum)
+        }
+
+        Spacer (modifier = Modifier.height(10.dp))
+
+        OutlinedButton(
+            onClick = {
+                mudarTela(context, LoginActivity::class.java)
+            },
+            border = BorderStroke(2.dp, AppColors.gunmetal),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = AppColors.platinum),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(300.dp)
+                .height(60.dp)
+        ) {
+            Text("Login",
+                fontFamily = PoppinsFonts.medium,
+                fontSize = 30.sp,
+                color = AppColors.gunmetal
+            )
         }
     }
+}

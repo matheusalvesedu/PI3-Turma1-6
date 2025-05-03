@@ -80,5 +80,14 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
+    // libs do Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
+
+    // libs de ícones
+    implementation(libs.androidx.material.icons.extended)
+
+    // libs do .env
+    implementation(libs.dotenv.kotlin)
 
 }
