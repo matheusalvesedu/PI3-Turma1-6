@@ -2,5 +2,6 @@
     <string name="app_name">SuperID</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_sign_up">SignUpActivity</string>
+    <string name="title_activity_principal_screen">PrincipalScreenActivity</string>
     <string name="title_activity_change_password">ChangePasswordActivit</string>
 </resources>
