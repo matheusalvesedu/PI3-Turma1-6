@@ -137,7 +137,6 @@ fun Screen(modifier: Modifier = Modifier) {
     }
 }
 
-
 @Composable
 fun DrawerContent() {
     Row(
@@ -247,13 +246,16 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
 
 @Composable
 fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
+    var showDropdown by remember { mutableStateOf(false) }
+    var selectedColor by remember { mutableStateOf(AppColors.platinum) }
+
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .height(200.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(if(darkMode) AppColors.jet else AppColors.satinSheenGold)
+            .background(if (darkMode) AppColors.jet else AppColors.satinSheenGold)
     ) {
         Column(
             modifier = Modifier
@@ -266,22 +268,33 @@ fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.width(16.dp))
+
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
                     color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
                 )
 
-                Spacer(modifier = Modifier.width(90.dp)) // Ajustado o espaço aqui
+                Spacer(modifier = Modifier.width(90.dp))
 
-                Box(
-                    modifier = Modifier
-                        .size(24.dp) // Tamanho do círculo
-                        .background(
-                            color = AppColors.platinum, // Colocar cor do Filtro
-                            shape = CircleShape
-                        )
-                )
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(color = selectedColor)
+                            .clickable { showDropdown = true }
+                    )
+
+                    ColorPickerDropdown(
+                        darkMode = darkMode,
+                        expanded = showDropdown,
+                        onDismissRequest = { showDropdown = false },
+                        onColorSelected = {
+                            selectedColor = it
+                        },
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -304,6 +317,7 @@ fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
         }
     }
 }
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -456,7 +470,7 @@ fun RowFilter() {
             "Lazer" to Color(0xFF9C27B0),
             "Saúde" to Color(0xFF4CAF50),
             "Trabalho" to Color(0xFFFF9800),
-            "Sem Filtro" to Color(0xFFFFFFFF)
+            "Sem Filtro" to AppColors.platinum
         )
     }
 
@@ -534,4 +548,46 @@ fun Filter(
     }
 }
 
+@Composable
+fun ColorPickerDropdown(
+    darkMode: Boolean,
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    onColorSelected: (Color) -> Unit
+) {
+    val filtros = listOf(
+        "Entretenimento" to Color(0xFFD1A740),
+        "Faculdade" to Color(0xFF38C5D9),
+        "Lazer" to Color(0xFF9C27B0),
+        "Saúde" to Color(0xFF4CAF50),
+        "Trabalho" to Color(0xFFFF9800),
+        "Sem Filtro" to AppColors.platinum
+    )
 
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.background(if (darkMode) AppColors.black else AppColors.white) // Cor de fundo do menu
+    ) {
+        filtros.forEach { filtro ->
+            DropdownMenuItem(
+                onClick = {
+                    onColorSelected(filtro.second)
+                    onDismissRequest()
+                },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .background(filtro.second, shape = CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = filtro.first, color = if (darkMode) AppColors.white else AppColors.black ) // cor do texto do menu
+                    }
+                }
+            )
+            HorizontalDivider()
+        }
+    }
+}
