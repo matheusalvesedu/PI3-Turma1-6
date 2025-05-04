@@ -264,11 +264,11 @@ fun CheckBoxTermosUso(
                         "Este aplicativo foi desenvolvido com fins educacionais no âmbito do Projeto Integrador 3 da PUC-Campinas. Ao utilizar o SuperID, você concorda com os seguintes termos:\n" +
                         "\n" +
                         "1. O SuperID é um gerenciador de autenticações que permite a criação de contas, armazenamento seguro de senhas e login sem senha.\n" +
-                        "2. Seus dados (nome, e-mail, UID e IMEI do dispositivo) são armazenados no Firebase de forma segura e com fins acadêmicos.\n" +
+                        "2. Seus dados (nome, e-mail, UID do dispositivo) são armazenados no Firebase de forma segura e com fins acadêmicos.\n" +
                         "3. As senhas cadastradas são criptografadas e associadas a tokens únicos.\n" +
                         "4. O aplicativo pode ser usado para login em sites parceiros, utilizando QR Code e autenticação segura.\n" +
                         "5. A redefinição da senha mestre depende da validação do seu e-mail.\n" +
-                        "6. Este app não atende a padrões avançados de segurança da informação e **não deve ser usado em ambientes reais** ou com dados sensíveis fora do contexto educacional.\n" +
+                        "6. Este app não atende a padrões avançados de segurança da informação e não deve ser usado em ambientes reais ou com dados sensíveis fora do contexto educacional.\n" +
                         "7. Ao criar sua conta, você declara estar ciente de que o uso do app é exclusivamente acadêmico e que seus dados podem ser apagados ao fim do semestre letivo.\n" +
                         "\n" +
                         "Para mais informações, entre em contato com a equipe de desenvolvimento ou os professores responsáveis pelo projeto.\n" +
