@@ -65,7 +65,7 @@ fun loginUser(
     onFailure: (Exception) -> Unit
 ) {
     val auth = Firebase.auth
-    auth.signInWithEmailAndPassword(email, senha).addOnCompleteListener{ task->
+    auth.signInWithEmailAndPassword(email, password).addOnCompleteListener{ task->
         if (task.isSuccessful){
             Toast.makeText(context, "Logado com sucesso!", Toast.LENGTH_SHORT).show()
             Log.i("AUTH-TESTE", "LOGIN REALIZADO"+
@@ -183,12 +183,15 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
             Text(
                 text = "Esqueci minha senha",
-                color = Color.Blue,
-                fontSize = 14.sp,
-                modifier = Modifier.clickable {
-                    mudarTela(context, InitialPageActivity::class.java)
-                },
-                fontFamily = PoppinsFonts.medium
+                fontFamily = PoppinsFonts.regular,
+                fontSize = 16.sp,
+                color = AppColors.gunmetal,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .clickable {
+                        mudarTela(context, PasswordRecoveryActivity::class.java )
+                    }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -235,18 +238,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
-        Text(
-            text = "Esqueci minha senha",
-            fontFamily = PoppinsFonts.regular,
-            fontSize = 16.sp,
-            color = AppColors.gunmetal,
-            textDecoration = TextDecoration.Underline,
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .clickable {
-                    mudarTela(context, PasswordRecoveryActivity::class.java )
-                }
-        )
+
 
     }
 }
