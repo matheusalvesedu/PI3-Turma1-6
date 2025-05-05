@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +29,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.SuperIDTheme
@@ -63,16 +65,20 @@ fun loginUser(
     onFailure: (Exception) -> Unit
 ) {
     val auth = Firebase.auth
-    auth.signInWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                onSuccess()
-            } else {
-                onFailure(task.exception ?: Exception("Erro desconhecido ao fazer login"))
-            }
-        }
-}
+    auth.signInWithEmailAndPassword(email, senha).addOnCompleteListener{ task->
+        if (task.isSuccessful){
+            Toast.makeText(context, "Logado com sucesso!", Toast.LENGTH_SHORT).show()
+            Log.i("AUTH-TESTE", "LOGIN REALIZADO"+
+                    "UID: ${task.result.user!!.uid}")
 
+            mudarTela(context, PrincipalScreenActivity::class.java)
+
+        }else{
+            Toast.makeText(context, "Erro: Login não realizado", Toast.LENGTH_LONG).show()
+            Log.i("AUTH-TESTE","Login não realizado")
+        }
+    }
+}
 
 @Preview
 @Composable
@@ -229,6 +235,19 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
+        Text(
+            text = "Esqueci minha senha",
+            fontFamily = PoppinsFonts.regular,
+            fontSize = 16.sp,
+            color = AppColors.gunmetal,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .clickable {
+                    mudarTela(context, PasswordRecoveryActivity::class.java )
+                }
+        )
+
     }
 }
 

@@ -58,6 +58,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
     implementation("androidx.navigation:navigation-compose:2.8.9")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -78,9 +82,17 @@ dependencies {
 
     // libs do Auth
     implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // libs do Navigation
     implementation(libs.androidx.navigation.compose)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
+
+    // libs de ícones
+    implementation(libs.androidx.material.icons.extended)
+
+    // libs do .env
+    implementation(libs.dotenv.kotlin)
 
 }

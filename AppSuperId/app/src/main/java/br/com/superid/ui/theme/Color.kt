@@ -7,6 +7,7 @@ val Gunmetal = Color(0xFF242F40)
 val SatinSheenGold = Color(0xFFCCA43B)
 val Platinum = Color(0xFFE5E5E5)
 val White = Color(0xFFFFFFFF)
+val Black = Color(0xFF000000)
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
@@ -22,4 +23,5 @@ object AppColors {
     val satinSheenGold = SatinSheenGold
     val platinum = Platinum
     val white = White
+    val black = Black
 }
