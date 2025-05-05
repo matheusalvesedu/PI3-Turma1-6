@@ -148,7 +148,7 @@ fun createUser(
     password: String,
     context: Context,
     onSuccess: () -> Unit,
-    onFailure: (Exception) -> Unit
+    onFailure: () -> Unit
 ) {
 
     val auth = Firebase.auth
@@ -166,10 +166,7 @@ fun createUser(
                 Log.i("CREATION-TEST", "Usuario criado com sucesso UID -> ${user?.uid} ")
             } else {
 
-                val exception = task.exception
-                if (exception != null) {
-                    onFailure(exception)
-                }
+                onFailure()
 
                 Log.i("CREATION-TEST", "Usuário não criado.")
                 task.exception?.let { e ->
@@ -589,9 +586,10 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         password,
                         context,
                         onSuccess = {shouldNavigate = true},
-                        onFailure = {e ->
+                        onFailure = {
                             isLoading = false
-                            Toast.makeText(context, "Erro: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Erro ao criar conta\nTente Novamente.", Toast.LENGTH_LONG).show()
+                            navController.navigate("name")
                         }
                     )
 
