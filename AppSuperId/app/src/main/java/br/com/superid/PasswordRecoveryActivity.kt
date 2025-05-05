@@ -42,11 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import androidx.compose.foundation.Image
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.layout.ContentScale
 
 class PasswordRecoveryActivity : ComponentActivity() {
@@ -55,7 +56,12 @@ class PasswordRecoveryActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SuperIDTheme {
-                PasswordRecoveryScreen(rememberNavController())
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    PasswordRecoveryScreen(rememberNavController())
+                }
             }
         }
     }
@@ -115,7 +121,7 @@ fun PasswordRecoveryScreen(navController: NavController) {
     }
 
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             activityBackButton(activity)
         }
@@ -123,7 +129,7 @@ fun PasswordRecoveryScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = AppColors.white)
+                .background(color = MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -146,9 +152,10 @@ fun PasswordRecoveryScreen(navController: NavController) {
 
             Text(
                 text = titleText,
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 24.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.titleLarge.copy( // Substitui PoppinsFonts.medium e fontSize manual
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
@@ -168,9 +175,10 @@ fun PasswordRecoveryScreen(navController: NavController) {
 
                 Text(
                     text= "Verifique sua caixa de entrada!",
-                    fontFamily = PoppinsFonts.medium,
-                    fontSize = 24.sp,
-                    color = AppColors.gunmetal,
+                    style = MaterialTheme.typography.titleLarge.copy( // Substitui PoppinsFonts.medium
+                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    ),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                     .padding(horizontal = 20.dp)
@@ -210,8 +218,11 @@ fun PasswordRecoveryScreen(navController: NavController) {
                     },
                     enabled = email.isNotBlank() && isEmailValid && !isLoading,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (email.isNotBlank() && isEmailValid) AppColors.gunmetal else AppColors.jet,
-                        contentColor = AppColors.white
+                        containerColor = if (email.isNotBlank() && isEmailValid)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
@@ -221,16 +232,20 @@ fun PasswordRecoveryScreen(navController: NavController) {
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = AppColors.satinSheenGold,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(24.dp)
                         )
                     } else {
                         Text(
                             text = "Enviar",
-                            fontFamily = PoppinsFonts.medium,
-                            fontSize = 16.sp,
-                            color = if (email.isNotBlank() && isEmailValid) AppColors.platinum else AppColors.gunmetal
+                            style = MaterialTheme.typography.bodyLarge.copy( // Substitui PoppinsFonts.medium
+                                fontSize = 16.sp,
+                                color = if (email.isNotBlank() && isEmailValid)
+                                    MaterialTheme.colorScheme.onPrimary
+                                else
+                                    MaterialTheme.colorScheme.onSurface
+                            )
                         )
                     }
                 }
