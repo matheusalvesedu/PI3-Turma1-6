@@ -116,7 +116,7 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
     val userAccount = hashMapOf(
         "name" to name,
         "email" to email,
-        "firstAccess" to "true"
+        "firstAccess" to true
     )
 
     db.collection("accounts").document(user!!.uid).set(userAccount)
@@ -496,7 +496,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     // Delay visual na criação de conta
     var shouldNavigate by remember { mutableStateOf(false) }
     LaunchedEffect(shouldNavigate) {
-        if(shouldNavigate){
+        if (shouldNavigate) {
             kotlinx.coroutines.delay(1500)
             navController.navigate("verification/$name/$email")
         }
@@ -639,6 +639,8 @@ fun VerificationScreen(navController: NavController, name: String, email: String
 
     var isVerified by remember { mutableStateOf(false) }
     val auth = Firebase.auth
+    var context = LocalContext.current
+
 
     LaunchedEffect(true) {
         while(!isVerified){
