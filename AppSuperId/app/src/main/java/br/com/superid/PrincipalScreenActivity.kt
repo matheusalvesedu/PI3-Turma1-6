@@ -67,6 +67,7 @@ class PrincipalScreenActivity : ComponentActivity() {
 }
 //TODO ligar a CadastroSenhaActivity no botão de adicionar senha
 data class SenhaData(
+    val apelido: String = "",
     val login: String = "",
     val senha: String = "",
     val descricao: String = "",
@@ -281,12 +282,13 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
                 .addOnSuccessListener { result ->
                     senhas.clear()
                     for (document in result) {
+                        val apelido = document.getString("Apelido da senha") ?: ""
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
                         val descricao = document.getString("descrição") ?: ""
                         val categoria = document.getString("categoria") ?: ""
                         val idSenha = document.toObject(SenhaData::class.java).copy(id = document.id)
-                        senhas.add(SenhaData(login, senha, descricao, categoria, idSenha.id))
+                        senhas.add(SenhaData(apelido, login, senha, descricao, categoria, idSenha.id))
                     }
                 }
         }
@@ -329,7 +331,7 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
         items(senhas.size) { index ->
             val item = senhas[index]
             CardItem(
-                title = "Senha ${index + 1}",
+                apelido = item.apelido,
                 login = "Login: ${item.login}",
                 senha = "Password: ${item.senha}",
                 descricao = "Descrição: ${item.descricao}",
@@ -344,7 +346,7 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
-fun CardItem(title: String, login: String, senha: String, descricao: String,
+fun CardItem(apelido: String, login: String, senha: String, descricao: String,
              categoria: String, idSenha: String, darkMode: Boolean,onDelete: () -> Unit) {
     var showDropdown by remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(AppColors.platinum) }
@@ -373,7 +375,7 @@ fun CardItem(title: String, login: String, senha: String, descricao: String,
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Text(
-                    text = title,
+                    text = apelido,
                     style = MaterialTheme.typography.titleLarge,
                     color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
                     modifier = Modifier.weight(1f)
