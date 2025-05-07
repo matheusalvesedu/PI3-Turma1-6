@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
@@ -49,17 +48,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.EventListener
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FirebaseFirestoreException
+
 
 
 class PrincipalScreenActivity : ComponentActivity() {
@@ -123,7 +115,7 @@ fun Screen(modifier: Modifier = Modifier) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                DrawerContent()
+                DrawerContent(darkMode = darkMode)
             }
         }
     ) {
@@ -164,83 +156,112 @@ fun Screen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun DrawerContent() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(16.dp)
+fun DrawerContent(darkMode: Boolean) {
+    val backgroundColor = if (darkMode) AppColors.jet else AppColors.platinum
+
+    Column(
+        modifier = Modifier
+            .width(280.dp) // o quanto o Drawer abre
+            .fillMaxHeight()
+            .background(backgroundColor)
     ) {
-        Icon(
-            painter = painterResource(R.drawable.logo_superid_black),
-            contentDescription = null,
-            modifier = Modifier.size(70.dp)
-        )
-        Text(
-            text = "SuperID",
-            fontSize = 24.sp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.logo_superid_black),
+                tint = if (darkMode) AppColors.platinum else AppColors.jet,
+                contentDescription = null,
+                modifier = Modifier.size(70.dp)
+            )
+            Text(
+                text = "SuperID",
+                color = if(darkMode) AppColors.platinum else AppColors.jet,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+
+        HorizontalDivider()
+        NavigationDrawerItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.AccountCircle,
+                    contentDescription = "Account",
+                    modifier = Modifier.size(27.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Account",
+                    fontSize = 17.sp,
+                )
+            },
+            selected = false,
+            onClick = { TODO() } ,
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = backgroundColor,
+                unselectedContainerColor = backgroundColor,
+                unselectedIconColor = if (darkMode) AppColors.platinum else AppColors.jet,
+                unselectedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
+            )
         )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        NavigationDrawerItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.Notifications,
+                    contentDescription = "Notifications",
+                    modifier = Modifier.size(27.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Notifications",
+                    fontSize = 17.sp,
+                )
+            },
+            selected = false,
+            onClick = { TODO() },
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = backgroundColor,
+                unselectedContainerColor = backgroundColor,
+                unselectedIconColor = if (darkMode) AppColors.platinum else AppColors.jet,
+                unselectedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
+            )
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        NavigationDrawerItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.Email,
+                    contentDescription = "Inbox",
+                    modifier = Modifier.size(27.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Inbox",
+                    fontSize = 17.sp,
+                )
+            },
+            selected = false,
+            onClick = { TODO() },
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = backgroundColor,
+                unselectedContainerColor = backgroundColor,
+                unselectedIconColor = if (darkMode) AppColors.platinum else AppColors.jet,
+                unselectedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
+            )
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
     }
-
-    HorizontalDivider()
-    NavigationDrawerItem(
-        icon = {
-            Icon(
-                imageVector = Icons.Rounded.AccountCircle,
-                contentDescription = "Account",
-                modifier = Modifier.size(27.dp)
-            )
-        },
-        label = {
-            Text(
-                text = "Account",
-                fontSize = 17.sp,
-            )
-        },
-        selected = false,
-        onClick = { TODO() }
-    )
-
-    Spacer(modifier = Modifier.height(4.dp))
-
-    NavigationDrawerItem(
-        icon = {
-            Icon(
-                imageVector = Icons.Rounded.Notifications,
-                contentDescription = "Notifications",
-                modifier = Modifier.size(27.dp)
-            )
-        },
-        label = {
-            Text(
-                text = "Notifications",
-                fontSize = 17.sp,
-            )
-        },
-        selected = false,
-        onClick = { TODO() }
-    )
-
-    Spacer(modifier = Modifier.height(4.dp))
-
-    NavigationDrawerItem(
-        icon = {
-            Icon(
-                imageVector = Icons.Rounded.Email,
-                contentDescription = "Inbox",
-                modifier = Modifier.size(27.dp)
-            )
-        },
-        label = {
-            Text(
-                text = "Inbox",
-                fontSize = 17.sp,
-            )
-        },
-        selected = false,
-        onClick = { TODO() }
-    )
-
-    Spacer(modifier = Modifier.height(4.dp))
 }
 
 @Composable
@@ -325,9 +346,6 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
 @Composable
 fun CardItem(title: String, login: String, senha: String, descricao: String,
              categoria: String, idSenha: String, darkMode: Boolean,onDelete: () -> Unit) {
-    val senhas = remember { mutableStateListOf<SenhaData>() }
-    val db = FirebaseFirestore.getInstance()
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
     var showDropdown by remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(AppColors.platinum) }
     var showOptionsMenu by remember { mutableStateOf(false) }
