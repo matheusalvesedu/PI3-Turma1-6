@@ -73,7 +73,7 @@ class PrincipalScreenActivity : ComponentActivity() {
         }
     }
 }
-
+//TODO ligar a CadastroSenhaActivity no botão de adicionar senha
 data class SenhaData(
     val login: String = "",
     val senha: String = "",
