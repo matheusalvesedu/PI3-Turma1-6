@@ -86,58 +86,56 @@ fun TelaPrincipalPreview() {
 
 @Composable
 fun Tela() {
+    var searchQuery by remember { mutableStateOf("") }
+
     Scaffold { paddingValues ->
         Screen(
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(paddingValues),
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it }
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Screen(modifier: Modifier = Modifier) {
+fun Screen(
+    modifier: Modifier = Modifier,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit
+) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         state = rememberTopAppBarState()
     )
-    val drawerState = rememberDrawerState(
-        initialValue = DrawerValue.Closed
-    )
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
-    // Variável para DarkMode
-    var darkMode by remember { mutableStateOf(true) } // true para escuro, false para claro
-
-    // Cor do fundo do App
-    val backgroundColor = if (darkMode) AppColors.gunmetal else Color.White // cor escura ou clara
-
-    // Definir a cor do botão + com base no estado do darkMode
+    var darkMode by remember { mutableStateOf(true) }
+    val backgroundColor = if (darkMode) AppColors.gunmetal else Color.White
     val buttonColor = if (darkMode) AppColors.satinSheenGold else AppColors.platinum
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                DrawerContent(darkMode = darkMode)
-            }
+            ModalDrawerSheet { DrawerContent(darkMode = darkMode) }
         }
     ) {
         Scaffold(
-            modifier = modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopBar(
                     scrollBehavior = scrollBehavior,
                     onOpenDrawrer = {
                         scope.launch {
-                            drawerState.apply {
-                                if (isClosed) open() else close()
-                            }
+                            drawerState.apply { if (isClosed) open() else close() }
                         }
                     },
-                    darkMode = darkMode, // Passa o estado do darkMode para TopBar
-                    onDarkModeChange = { darkMode = it } // Função para alterar o darkMode
+                    darkMode = darkMode,
+                    onDarkModeChange = { darkMode = it },
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = onSearchQueryChange
                 )
             },
-            containerColor = backgroundColor, // Define o fundo aqui
+            containerColor = backgroundColor,
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { },
@@ -150,7 +148,8 @@ fun Screen(modifier: Modifier = Modifier) {
         ) { paddingValues ->
             ScreenContent(
                 paddingValues = paddingValues,
-                darkMode = darkMode // Passa o estado do darkMode para ScreenContent
+                darkMode = darkMode,
+                searchQuery = searchQuery
             )
         }
     }
@@ -266,11 +265,11 @@ fun DrawerContent(darkMode: Boolean) {
 }
 
 @Composable
-fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
+fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean, searchQuery: String) {
     val senhas = remember { mutableStateListOf<SenhaData>() }
     val db = FirebaseFirestore.getInstance()
     val userId = FirebaseAuth.getInstance().currentUser?.uid
-    var context = LocalContext.current
+    val context = LocalContext.current
 
     // Carregar os dados do Firestore
     LaunchedEffect(userId) {
@@ -295,7 +294,6 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
     }
 
     fun deletePassword(idSenha: String) {
-
         if (userId != null) {
             db.collection("accounts")
                 .document(userId)
@@ -312,6 +310,11 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
         }
     }
 
+    val filteredSenhas = if (searchQuery.isBlank()) {
+        senhas
+    } else {
+        senhas.filter { it.apelido.contains(searchQuery, ignoreCase = true) }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -328,8 +331,8 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        items(senhas.size) { index ->
-            val item = senhas[index]
+        items(filteredSenhas.size) { index ->
+            val item = filteredSenhas[index]
             CardItem(
                 apelido = item.apelido,
                 login = "Login: ${item.login}",
@@ -490,35 +493,29 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior,
     onOpenDrawrer: () -> Unit,
     darkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit
+    onDarkModeChange: (Boolean) -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-
     Column {
-        // Spacer para separar do topo da tela
         Spacer(modifier = Modifier.height(16.dp))
-
         TopAppBar(
-            modifier = modifier
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(100.dp)),
+            modifier = Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(100.dp)),
             scrollBehavior = scrollBehavior,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = if(darkMode) AppColors.jet else AppColors.platinum
+                containerColor = if (darkMode) AppColors.jet else AppColors.platinum
             ),
-            windowInsets = WindowInsets(0.dp), // Remove o padding padrão da status bar
-
+            windowInsets = WindowInsets(0.dp),
             title = {
                 TextField(
                     value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    onValueChange = onSearchQueryChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
-                        Text("Procure por sua Senha", fontSize = 12.sp,color = if(darkMode) AppColors.platinum else AppColors.jet)
+                        Text("Procure por sua Senha", fontSize = 12.sp, color = if (darkMode) AppColors.platinum else AppColors.jet)
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(50.dp),
@@ -530,41 +527,25 @@ fun TopBar(
                         unfocusedContainerColor = if (darkMode) AppColors.jet else AppColors.platinum,
                         focusedIndicatorColor = if (darkMode) AppColors.satinSheenGold else AppColors.jet,
                         unfocusedIndicatorColor = if (darkMode) AppColors.satinSheenGold else AppColors.jet,
-                    ),
+                    )
                 )
             },
-
             navigationIcon = {
                 Icon(
                     imageVector = Icons.Rounded.Menu,
                     contentDescription = null,
                     tint = if (darkMode) AppColors.platinum else AppColors.jet,
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .size(27.dp)
-                        .clickable {
-                            onOpenDrawrer()
-                        }
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp).size(27.dp).clickable { onOpenDrawrer() }
                 )
             },
-
             actions = {
-                Switch(
-                    darkMode = darkMode,
-                    onCheckedChange = onDarkModeChange
-                )
+                Switch(darkMode = darkMode, onCheckedChange = onDarkModeChange)
                 var expanded by remember { mutableStateOf(false) }
-
                 Icon(
                     imageVector = Icons.Rounded.AccountCircle,
                     contentDescription = null,
                     tint = if (darkMode) AppColors.platinum else AppColors.jet,
-                    modifier = Modifier
-                        .padding(start = 4.dp, end = 8.dp)
-                        .size(30.dp)
-                        .clickable {
-                            expanded = true
-                        }
+                    modifier = Modifier.padding(start = 4.dp, end = 8.dp).size(30.dp).clickable { expanded = true }
                 )
                 DropdownMenuWithDetails(
                     expanded = expanded,
