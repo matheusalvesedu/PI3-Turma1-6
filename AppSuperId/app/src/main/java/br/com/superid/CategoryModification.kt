@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,13 +40,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.superid.ui.theme.SuperIDTheme
-import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.dataObjects
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -53,43 +56,27 @@ class CategoryModification : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SuperIDTheme {
-                PreviewCategoryMod()
+                CategoryModFlow()
             }
         }
     }
 }
 
 @Composable
-fun CaegoryModFlow(){
+fun CategoryModFlow(){
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "name") {
+    NavHost(navController = navController, startDestination = "categoryList") {
 
-        composable("name") { NameScreen(navController) }
-
-        composable("email/{name}") { entry ->
-            entry.arguments?.getString("name")?.let { name ->
-                EmailScreen(navController,name)
-            }
+        composable("categoryList") {
+            CategoriesListScreen(navController)
         }
 
-        composable("password/{name}/{email}") { entry->
-            entry.arguments?.getString("name")?.let { name ->
-                entry.arguments?.getString("email")?.let{ email ->
-                    PasswordScreen(navController,name,email)
-                }
-            }
-
-        }
-
-        composable("verification/{name}/{email}"){ entry ->
-            entry.arguments?.getString("name")?.let { name->
-                entry.arguments?.getString("email")?.let{ email ->
-                    VerificationScreen(navController,name,email)
-                }
+        composable("editCategory/{nomeDaCategoria}") { entry ->
+            val nomeDaCategoria = entry.arguments?.getString("nomeDaCategoria")
+            nomeDaCategoria?.let {
+                EditCategoryScreen(navController, categoria = it)
             }
         }
-
-        composable("home"){HomeScreen(navController)}
     }
 }
 
@@ -102,7 +89,7 @@ fun getCategorias(userId: String, context: Context, onResult: (List<String>) -> 
         .get()
         .addOnSuccessListener { result ->
             val nomes = result.documents
-                .mapNotNull { it.getString("nome") }
+                .mapNotNull { it.getString("Nome") }
                 .filter { it != "Sites Web" }
             onResult(nomes)
         }
@@ -112,15 +99,82 @@ fun getCategorias(userId: String, context: Context, onResult: (List<String>) -> 
         }
 }
 
-@Composable
-fun PreviewCategoryMod() {
-    CategoryMod()
+fun alterarCategoria(userId: String,
+                      categoriaAtual: String,
+                      novoNome: String,
+                      context: Context,
+                      onSuccess: () -> Unit = {},
+                      onFailure: () -> Unit = {}){
+    if (novoNome.isBlank()){
+        Toast.makeText(context, "Digite um novo nome.", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val db = Firebase.firestore
+    val categorias = db.collection("accounts")
+        .document(userId)
+        .collection("Categorias")
+
+    val documentoAtual = categorias.document(categoriaAtual)
+    val documentoNovo = categorias.document(novoNome)
+
+    documentoAtual.get().addOnSuccessListener { snapshot ->
+        if (snapshot.exists()) {
+            val dados = snapshot.data ?: emptyMap<String, Any>()
+
+            val novosDados = dados.toMutableMap()
+            novosDados["Nome"] = novoNome
+
+            documentoNovo.set(novosDados).addOnSuccessListener {
+                documentoAtual.delete().addOnSuccessListener {
+                    Toast.makeText(context, "Categoria renomeada com sucesso!", Toast.LENGTH_SHORT)
+                        .show()
+                    onSuccess()
+                }.addOnFailureListener {
+                    Toast.makeText(context, "Erro ao excluir categoria antiga.", Toast.LENGTH_SHORT)
+                        .show()
+                    onFailure()
+                }
+            }.addOnFailureListener {
+                Toast.makeText(context, "Erro ao criar nova categoria.", Toast.LENGTH_SHORT).show()
+                onFailure()
+
+            }
+        } else {
+            Toast.makeText(context, "Categoria original não encontrada.", Toast.LENGTH_SHORT).show()
+            onFailure()
+        }
+    }.addOnFailureListener {
+        Toast.makeText(context, "Erro ao acessar categoria atual.", Toast.LENGTH_SHORT).show()
+        onFailure()
+    }
+}
+
+fun excluirCategoria(userId: String,
+                     categoria: String,
+                     context: Context,
+                     onSuccess: () -> Unit = {},
+                     onFailure: () -> Unit = {}){
+    val db = Firebase.firestore
+    val document = db.collection("accounts")
+        .document(userId)
+        .collection("Categorias")
+        .document(categoria)
+
+    document.delete()
+        .addOnSuccessListener {
+            Toast.makeText(context, "Categoria excluída.", Toast.LENGTH_SHORT).show()
+            onSuccess
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Erro ao excluir categoria.", Toast.LENGTH_SHORT).show()
+            onFailure
+        }
 }
 
 @SuppressLint("ContextCastToActivity")
-@Preview(showBackground = true)
 @Composable
-fun CategoryMod() {
+fun CategoriesListScreen(navController: NavController) {
     val auth = Firebase.auth
     val user = auth.currentUser
     val uid = user?.uid
@@ -202,7 +256,7 @@ fun CategoryMod() {
             categorias.forEach{ categoria ->
                 TextButton(
                     onClick = {
-
+                        navController.navigate("editCategory/${categoria}")
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -218,7 +272,126 @@ fun CategoryMod() {
                     )
                 }
             }
+        }
+    }
+}
 
+@Composable
+fun EditCategoryScreen(navController: NavController, categoria: String){
+    val context = LocalContext.current
+    val user = Firebase.auth.currentUser
+    val uid = user?.uid ?: return
+
+    var novoNome by remember { mutableStateOf("") }
+    var showPopUp by remember { mutableStateOf(false) }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            ScreenBackButton(navController, context)
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.logo_superid_darkblue),
+                    contentDescription = "Logo do Super ID",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            Text(text = "Alterar a categoria ${categoria}",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 24.sp
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            inputBox(novoNome, { novoNomeSup -> novoNome = novoNomeSup }, "Digite o novo nome")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {}
+            ) {
+                Text(
+                    text = "Alterar cor"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Button(
+                onClick = { alterarCategoria(uid, categoria, novoNome, context)},
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.primary)
+                    .height(50.dp)
+                    .padding(10.dp),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = "Salvar",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { showPopUp = true },
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.error)
+                    .height(50.dp)
+                    .padding(10.dp),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = "Excluir",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                )
+            }
+        }
+
+        if (showPopUp) {
+            AlertDialog(
+                onDismissRequest = { showPopUp = false },
+                title = { Text("Confirmar exclusão") },
+                text = { Text("Tem certeza de que deseja excluir esta categoria?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showPopUp = false
+                        excluirCategoria(uid, categoria, context)
+                    }) {
+                        Text("Sim")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showPopUp = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
