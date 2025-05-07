@@ -1,7 +1,10 @@
 package br.com.superid
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
@@ -44,6 +47,20 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.ui.platform.LocalContext
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.EventListener
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestoreException
+
 
 class PrincipalScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +73,15 @@ class PrincipalScreenActivity : ComponentActivity() {
         }
     }
 }
+
+data class SenhaData(
+    val login: String = "",
+    val senha: String = "",
+    val descricao: String = "",
+    val categoria: String = "",
+    val id: String = ""
+)
+
 
 @Preview
 @Composable
@@ -219,6 +245,51 @@ fun DrawerContent() {
 
 @Composable
 fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
+    val senhas = remember { mutableStateListOf<SenhaData>() }
+    val db = FirebaseFirestore.getInstance()
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    var context = LocalContext.current
+
+    // Carregar os dados do Firestore
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            db.collection("accounts")
+                .document(userId)
+                .collection("Senhas")
+                .get()
+                .addOnSuccessListener { result ->
+                    senhas.clear()
+                    for (document in result) {
+                        val login = document.getString("login") ?: ""
+                        val senha = document.getString("senha") ?: ""
+                        val descricao = document.getString("descrição") ?: ""
+                        val categoria = document.getString("categoria") ?: ""
+                        val idSenha = document.toObject(SenhaData::class.java).copy(id = document.id)
+                        senhas.add(SenhaData(login, senha, descricao, categoria, idSenha.id))
+                    }
+                }
+        }
+    }
+
+    fun deletePassword(idSenha: String) {
+
+        if (userId != null) {
+            db.collection("accounts")
+                .document(userId)
+                .collection("Senhas")
+                .document(idSenha)
+                .delete()
+                .addOnSuccessListener {
+                    Toast.makeText(context, "Senha excluída com sucesso!", Toast.LENGTH_SHORT).show()
+                    senhas.removeAll { it.id == idSenha }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(context, "Erro ao excluir senha: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -230,24 +301,38 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean) {
     ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            RowFilter() // Chama a os Filtros
+            RowFilter()
             Spacer(modifier = Modifier.height(8.dp))
         }
-        items(10) { index ->
+
+        items(senhas.size) { index ->
+            val item = senhas[index]
             CardItem(
-                title = "Título do Card ${index + 1}",
-                user = "User : email${index + 1}@gmail.com",
-                password = "Password : ******* do Card ${index + 1}",
-                darkMode = darkMode
+                title = "Senha ${index + 1}",
+                login = "Login: ${item.login}",
+                senha = "Password: ${item.senha}",
+                descricao = "Descrição: ${item.descricao}",
+                categoria = "Categoria: ${item.categoria}",
+                idSenha = item.id,
+                darkMode = darkMode,
+                onDelete = { deletePassword(item.id) }
             )
         }
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
-fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
+fun CardItem(title: String, login: String, senha: String, descricao: String,
+             categoria: String, idSenha: String, darkMode: Boolean,onDelete: () -> Unit) {
+    val senhas = remember { mutableStateListOf<SenhaData>() }
+    val db = FirebaseFirestore.getInstance()
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
     var showDropdown by remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(AppColors.platinum) }
+    var showOptionsMenu by remember { mutableStateOf(false) }
+    var context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -272,10 +357,9 @@ fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
+                    color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                    modifier = Modifier.weight(1f)
                 )
-
-                Spacer(modifier = Modifier.width(90.dp))
 
                 Box {
                     Box(
@@ -285,22 +369,65 @@ fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
                             .background(color = selectedColor)
                             .clickable { showDropdown = true }
                     )
-
                     ColorPickerDropdown(
                         darkMode = darkMode,
                         expanded = showDropdown,
                         onDismissRequest = { showDropdown = false },
-                        onColorSelected = {
-                            selectedColor = it
-                        },
+                        onColorSelected = { selectedColor = it },
                     )
+                }
+
+                Box {
+                    IconButton(onClick = { showOptionsMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções",
+                            tint = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showOptionsMenu,
+                        onDismissRequest = { showOptionsMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Alterar senha") },
+                            onClick = {
+                                showOptionsMenu = false
+                                val intent = Intent(context, ChangeOrDeleteActivity::class.java)
+                                intent.putExtra("senhaId", idSenha)
+                                context.startActivity(intent)
+
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Excluir") },
+                            onClick = {
+                                showOptionsMenu = false
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (showDeleteDialog) {
+                ConfirmDeleteDialog(
+                    onConfirm = {
+                        onDelete()
+                        showDeleteDialog = false
+                    },
+                    onDismiss = {
+                        showDeleteDialog = false
+                    }
+                )
+            }
+
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = user,
+                text = login,
                 style = MaterialTheme.typography.titleMedium,
                 color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
                 modifier = Modifier.padding(start = 16.dp)
@@ -309,14 +436,34 @@ fun CardItem(title: String, user: String, password: String, darkMode: Boolean) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = password,
+                text = senha,
                 style = MaterialTheme.typography.titleMedium,
+                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = descricao,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = categoria,
+                style = MaterialTheme.typography.bodyMedium,
                 color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
                 modifier = Modifier.padding(start = 16.dp)
             )
         }
     }
 }
+
+
 
 
 
@@ -588,6 +735,59 @@ fun ColorPickerDropdown(
                 }
             )
             HorizontalDivider()
+        }
+    }
+}
+
+@Composable
+fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AppColors.white)
+                .padding(16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Tem certeza que deseja excluir esta senha?",
+                    fontSize = 18.sp,
+                    color = AppColors.gunmetal,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            onConfirm()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.satinSheenGold,
+                            contentColor = AppColors.black
+                        )
+                    ) {
+                        Text("Sim")
+                    }
+
+                    Button(
+                        onClick = {
+                            onDismiss()
+                        },
+
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.gunmetal,
+                            contentColor = AppColors.white
+                        )
+                    ) {
+                        Text("Não")
+                    }
+                }
+            }
         }
     }
 }
