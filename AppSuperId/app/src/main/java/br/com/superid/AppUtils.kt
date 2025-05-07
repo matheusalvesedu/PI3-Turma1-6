@@ -161,7 +161,9 @@ fun ScreenBackButton(navController: NavController,context: Context){
 }
 
 // Função de criptografia
-fun aesEncryptWithKey(data: ByteArray): ByteArray{
+fun aesEncryptWithKey(data: String): ByteArray{
+
+    val byteData = data.toByteArray(Charsets.UTF_8)
     val keyString = System.getenv("AES_KEY") ?: error("AES_KEY não encontrado.")
     val keyBytes = keyString.toByteArray(Charsets.UTF_8)
     require(keyBytes.size == 32) { "AES_KEY deve ter 32 bytes para AES-256" }
@@ -172,11 +174,11 @@ fun aesEncryptWithKey(data: ByteArray): ByteArray{
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv)
 
-    return cipher.doFinal(data)
+    return cipher.doFinal(byteData)
 }
 
 // Função de descriptografia
-fun aesDescryptWithKey(encryptedData: ByteArray): ByteArray{
+fun aesDescryptWithKey(encryptedData: ByteArray): String{
     val keyString = System.getenv("AES_KEY") ?: error("AES_KEY não encontrado.")
     val keyBytes = keyString.toByteArray(Charsets.UTF_8)
     require(keyBytes.size == 32) { "AES_KEY deve ter 32 bytes para AES-256" }
@@ -187,7 +189,9 @@ fun aesDescryptWithKey(encryptedData: ByteArray): ByteArray{
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
 
-    return cipher.doFinal(encryptedData)
+    val decryptedBytes = cipher.doFinal(encryptedData)
+
+    return String(decryptedBytes, Charsets.UTF_8)
 }
 
 val poppinsRegular = FontFamily(Font(R.font.poppins_regular))

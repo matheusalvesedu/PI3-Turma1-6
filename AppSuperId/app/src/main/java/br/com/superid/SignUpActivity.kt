@@ -112,6 +112,7 @@ fun checkPasswordRequirements(password: String): PasswordRequirements{
 fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
 
     val db = Firebase.firestore
+    val UID = user!!.uid
 
     val userAccount = hashMapOf(
         "name" to name,
@@ -119,8 +120,35 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
         "firstAccess" to true
     )
 
-    db.collection("accounts").document(user!!.uid).set(userAccount)
+    val defaultCategories = listOf(
+        hashMapOf(
+            "Nome" to "Sites Web",
+            "Cor" to "0xFFCCA43B"
+        ),
+        hashMapOf(
+            "Nome" to "Aplicativos",
+            "Cor" to "0xFF3BBDCC"
+        ),
+        hashMapOf(
+            "Nome" to "Teclados de Acesso Físico",
+            "Cor" to "0xFF58CC3B"
+        )
+    )
+
+
+    db.collection("accounts").document(UID).set(userAccount)
         .addOnSuccessListener{
+
+            for (categoria in defaultCategories) {
+
+                val categoryName = categoria["Nome"] ?: "Categoria sem nome"
+
+                db.collection("accounts").document(UID).collection("Categorias")
+                    .document(categoryName.toString())
+                    .set(categoria)
+
+            }
+
             Log.d("Firestore", "Informações da conta salva com sucesso!")
         }
         .addOnFailureListener{ e ->
@@ -651,7 +679,8 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                navController.navigate("home")
+                //navController.navigate("home")
+                mudarTela(context, CadastroSenhaActivity::class.java)
             }
 
             delay(3000)

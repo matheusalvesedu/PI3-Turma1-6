@@ -1,5 +1,7 @@
 package br.com.superid
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -41,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,8 +57,7 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.security.SecureRandom
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
+import java.util.Base64
 
 class CadastroSenhaActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,10 +71,17 @@ class CadastroSenhaActivity : ComponentActivity() {
     }
 }
 
+//função que gera um access token aleatorio
+fun generateAccessToken() :String {
+    val randomBytes = ByteArray(192) //gera um array de bytes com 192 de tamanho pois ao virar base64 ele ira atinger os 256 caracteres requisitados
+    SecureRandom().nextBytes(randomBytes) //Secure random é um gerador securo de numeros, next bytes transforma os numeros em  bytes que sao alocados no meu array randomBytes
+    return Base64.getEncoder().encodeToString(randomBytes) //transformo o array para base64
+}
+
 //função que salva a senha em uma subcoleçao do usuario
 fun savePasswordToDb(
     user: FirebaseUser,
-    login: String,
+    login: String?,
     password: String,
     description: String?,
     category: String,
@@ -81,15 +90,16 @@ fun savePasswordToDb(
 ){
 
     val db = Firebase.firestore
-
     val UID = user.uid
+
+    val accessToken = generateAccessToken()
 
     val passwordData = hashMapOf(
         "login" to login,
         "senha" to password,
         "descrição" to description,
-        "categoria" to category
-        // "accessToken" to alguma variavel precisa implementar o gerador do accessToken
+        "categoria" to category,
+        "accessToken" to accessToken
     )
 
     db.collection("accounts")
@@ -180,6 +190,7 @@ fun DropDown(selectedText: String, onCategorySelected: (String) -> Unit){
 
 }
 
+@SuppressLint("ContextCastToActivity")
 @Composable
 fun CadastroSenhaScreen(){
 
@@ -195,6 +206,8 @@ fun CadastroSenhaScreen(){
 
     var shouldNavigate by remember { mutableStateOf(false) }
 
+    val activity = LocalContext.current as? Activity
+
     LaunchedEffect(shouldNavigate) {
         if(shouldNavigate){
             kotlinx.coroutines.delay(1500)
@@ -205,7 +218,7 @@ fun CadastroSenhaScreen(){
     Scaffold(
         containerColor = AppColors.white,
         topBar = {
-            // preciso da ajuda para implementra o back btn ScreenBackButton(navController, context)
+            activityBackButton(activity)
         }
     ) { innerPadding ->
         Column(
@@ -246,7 +259,7 @@ fun CadastroSenhaScreen(){
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            inputBox(login,{ newlogin -> login = newlogin },"Digite seu login")
+            inputBox(login,{ newlogin -> login = newlogin },"Digite seu login (opcional)")
 
             Spacer(modifier = Modifier.size(16.dp))
 
@@ -298,8 +311,7 @@ fun CadastroSenhaScreen(){
                         text = "Salvar novo login",
                         fontFamily = PoppinsFonts.medium,
                         fontSize = 20.sp,
-                        color = if (password.isNotBlank() &&
-                            !shouldNavigate) AppColors.platinum else AppColors.gunmetal
+                        color = if (password.isNotBlank()) AppColors.platinum else AppColors.gunmetal
                     )
                 }
             }
