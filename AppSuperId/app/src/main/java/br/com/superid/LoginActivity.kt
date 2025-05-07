@@ -71,8 +71,7 @@ fun loginUser(
             Log.i("AUTH-TESTE", "LOGIN REALIZADO"+
                     "UID: ${task.result.user!!.uid}")
 
-            //mudarTela(context, PrincipalScreenActivity::class.java)
-            mudarTela(context, CadastroSenhaActivity::class.java)
+            mudarTela(context, PrincipalScreenActivity::class.java)
         }else{
             Toast.makeText(context, "Erro: Login não realizado", Toast.LENGTH_LONG).show()
             Log.i("AUTH-TESTE","Login não realizado")
