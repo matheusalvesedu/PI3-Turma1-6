@@ -81,6 +81,7 @@ fun generateAccessToken() :String {
 //função que salva a senha em uma subcoleçao do usuario
 fun savePasswordToDb(
     user: FirebaseUser,
+    passwordNickName: String,
     login: String?,
     password: String,
     description: String?,
@@ -92,11 +93,13 @@ fun savePasswordToDb(
     val db = Firebase.firestore
     val UID = user.uid
 
+    val encryptedPassword = aesEncryptWithKey(password)
     val accessToken = generateAccessToken()
 
     val passwordData = hashMapOf(
+        "Apelido da senha" to passwordNickName,
         "login" to login,
-        "senha" to password,
+        "senha" to encryptedPassword,
         "descrição" to description,
         "categoria" to category,
         "accessToken" to accessToken
@@ -197,6 +200,7 @@ fun CadastroSenhaScreen(){
     val auth = Firebase.auth
     val user = auth.currentUser
 
+    var passwordNickName by remember { mutableStateOf("") }
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -259,6 +263,10 @@ fun CadastroSenhaScreen(){
 
             Spacer(modifier = Modifier.size(16.dp))
 
+            inputBox(passwordNickName,{ newPasswordNickName -> passwordNickName = newPasswordNickName },"Digite um apelido para a senha")
+
+            Spacer(modifier = Modifier.size(16.dp))
+
             inputBox(login,{ newlogin -> login = newlogin },"Digite seu login (opcional)")
 
             Spacer(modifier = Modifier.size(16.dp))
@@ -281,6 +289,7 @@ fun CadastroSenhaScreen(){
                     if(user != null){
                         savePasswordToDb(
                             user,
+                            passwordNickName,
                             login,
                             password,
                             description,
@@ -290,8 +299,9 @@ fun CadastroSenhaScreen(){
                         )
                     }
                 },
+                enabled = password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (password.isNotBlank()) AppColors.gunmetal else AppColors.jet,
+                    containerColor = if (password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank()) AppColors.gunmetal else AppColors.jet,
                     contentColor = AppColors.white
                 ),
                 modifier = Modifier
@@ -311,7 +321,7 @@ fun CadastroSenhaScreen(){
                         text = "Salvar novo login",
                         fontFamily = PoppinsFonts.medium,
                         fontSize = 20.sp,
-                        color = if (password.isNotBlank()) AppColors.platinum else AppColors.gunmetal
+                        color = if (password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank()) AppColors.platinum else AppColors.gunmetal
                     )
                 }
             }

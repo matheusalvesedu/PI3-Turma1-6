@@ -35,9 +35,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.superid.ui.theme.AppColors
 import io.github.cdimascio.dotenv.dotenv
+import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import java.util.Base64
+
+
 
 // Função para transicionar entre as telas
 fun mudarTela(context: Context, destination: Class<*>){
@@ -161,37 +165,32 @@ fun ScreenBackButton(navController: NavController,context: Context){
 }
 
 // Função de criptografia
-fun aesEncryptWithKey(data: String): ByteArray{
+fun aesEncryptWithKey(data: String): String{
 
-    val byteData = data.toByteArray(Charsets.UTF_8)
-    val keyString = System.getenv("AES_KEY") ?: error("AES_KEY não encontrado.")
-    val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-    require(keyBytes.size == 32) { "AES_KEY deve ter 32 bytes para AES-256" }
+    val key = SecretKeySpec(CryptoKey.getKey(), "AES")
 
-    val secretKey = SecretKeySpec(keyBytes, "AES")
-    val iv = IvParameterSpec(ByteArray(16))
+    val cipher = Cipher.getInstance("AES")
 
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv)
+    cipher.init(Cipher.ENCRYPT_MODE, key)
+    val dataCripted = cipher.doFinal(data.toByteArray())
 
-    return cipher.doFinal(byteData)
+    return Base64.getEncoder().encodeToString(dataCripted)
+
 }
 
 // Função de descriptografia
-fun aesDescryptWithKey(encryptedData: ByteArray): String{
-    val keyString = System.getenv("AES_KEY") ?: error("AES_KEY não encontrado.")
-    val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-    require(keyBytes.size == 32) { "AES_KEY deve ter 32 bytes para AES-256" }
+fun aesDecryptWithKey(encryptedData: String): String{
 
-    val secretKey = SecretKeySpec(keyBytes, "AES")
-    val iv = IvParameterSpec(ByteArray(16))
+    val dataBaseByteArray = Base64.getDecoder().decode(encryptedData)
 
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
+    val key = SecretKeySpec(CryptoKey.getKey(), "AES")
 
-    val decryptedBytes = cipher.doFinal(encryptedData)
+    val cipher = Cipher.getInstance("AES")
 
-    return String(decryptedBytes, Charsets.UTF_8)
+    cipher.init(Cipher.DECRYPT_MODE,key)
+    val dataDecrypted = cipher.doFinal(dataBaseByteArray)
+
+    return String(dataDecrypted)
 }
 
 val poppinsRegular = FontFamily(Font(R.font.poppins_regular))
@@ -203,3 +202,5 @@ object PoppinsFonts {
     val medium = poppinsMedium
     val bold = poppinsBold
 }
+
+
