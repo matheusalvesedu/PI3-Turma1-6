@@ -65,7 +65,6 @@ fun loginUser(
 
             onSuccess()
             mudarTela(context, PrincipalScreenActivity::class.java)
-
         }else{
             Toast.makeText(context, "Erro: Login não realizado", Toast.LENGTH_LONG).show()
             Log.i("AUTH-TESTE","Login não realizado")
