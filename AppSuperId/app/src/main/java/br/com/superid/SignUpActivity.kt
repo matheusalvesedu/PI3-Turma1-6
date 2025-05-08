@@ -145,8 +145,7 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
                 val categoryName = categoria["Nome"] ?: "Categoria sem nome"
 
                 db.collection("accounts").document(UID).collection("Categorias")
-                    .document(categoryName.toString())
-                    .set(categoria)
+                    .add(categoria)
 
             }
 
@@ -241,8 +240,6 @@ fun SignUpFlow(){
                     }
                 }
             }
-
-            composable("home"){HomeScreen(navController)}
 
         }
     }
@@ -532,7 +529,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     var shouldNavigate by remember { mutableStateOf(false) }
     LaunchedEffect(shouldNavigate) {
         if (shouldNavigate) {
-            kotlinx.coroutines.delay(1500)
+            kotlinx.coroutines.delay(1000)
             navController.navigate("verification/$name/$email")
         }
     }
@@ -678,7 +675,6 @@ fun VerificationScreen(navController: NavController, name: String, email: String
     val auth = Firebase.auth
     var context = LocalContext.current
 
-
     LaunchedEffect(true) {
         while(!isVerified){
 
@@ -688,8 +684,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                //navController.navigate("home")
-                mudarTela(context, CadastroSenhaActivity::class.java)
+                mudarTela(context, PrincipalScreenActivity::class.java)
             }
 
             delay(3000)
@@ -778,9 +773,4 @@ fun VerificationScreen(navController: NavController, name: String, email: String
         }
 
     }
-}
-
-@Composable
-fun HomeScreen(navController: NavController){
-    Text("teste")
 }
