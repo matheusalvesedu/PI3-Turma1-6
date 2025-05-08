@@ -32,9 +32,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Menu
@@ -540,16 +537,11 @@ fun TopBar(
             },
             actions = {
                 Switch(darkMode = darkMode, onCheckedChange = onDarkModeChange)
-                var expanded by remember { mutableStateOf(false) }
                 Icon(
-                    imageVector = Icons.Rounded.AccountCircle,
-                    contentDescription = null,
+                    painter = painterResource(R.drawable.logo_superid_black),
                     tint = if (darkMode) AppColors.platinum else AppColors.jet,
-                    modifier = Modifier.padding(start = 4.dp, end = 8.dp).size(30.dp).clickable { expanded = true }
-                )
-                DropdownMenuWithDetails(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    contentDescription = null,
+                    modifier = Modifier.size(42.dp)
                 )
             }
         )
@@ -575,39 +567,6 @@ fun Switch(
     )
 }
 
-@Composable
-fun DropdownMenuWithDetails(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit
-) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest
-    ) {
-        DropdownMenuItem(
-            text = { Text("Profile") },
-            leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
-            onClick = { /* Do something... */ }
-        )
-        HorizontalDivider()
-        DropdownMenuItem(
-            text = { Text("Settings") },
-            leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-            onClick = { /* Do something... */ }
-        )
-
-        HorizontalDivider()
-        DropdownMenuItem(
-            text = { Text("About") },
-            leadingIcon = { Icon(Icons.Outlined.Info, contentDescription = null) },
-            onClick = { /* Do something... */ }
-        )
-        DropdownMenuItem(
-            text = { Text("Help") },
-            onClick = { /* Do something... */ }
-        )
-    }
-}
 
 @Composable
 fun RowFilter() {
