@@ -95,4 +95,7 @@ dependencies {
     // libs do .env
     implementation(libs.dotenv.kotlin)
 
+    // libs do Color Picker
+    implementation(libs.colorpicker.compose)
+
 }

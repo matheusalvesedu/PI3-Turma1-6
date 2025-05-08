@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import android.widget.Space
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,6 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -28,13 +31,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,7 +52,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
+import com.github.skydoves.colorpicker.compose.ColorPickerController
+import com.github.skydoves.colorpicker.compose.HsvColorPicker
+import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.dataObjects
 import com.google.firebase.firestore.ktx.firestore
@@ -71,16 +83,26 @@ fun CategoryModFlow(){
             CategoriesListScreen(navController)
         }
 
-        composable("editCategory/{nomeDaCategoria}") { entry ->
-            val nomeDaCategoria = entry.arguments?.getString("nomeDaCategoria")
-            nomeDaCategoria?.let {
-                EditCategoryScreen(navController, categoria = it)
+        composable("editCategory/{idDaCategoria}") { entry ->
+            val idDaCategoria = entry.arguments?.getString("idDaCategoria")
+            idDaCategoria?.let {
+                EditCategoryScreen(navController, idDaCategoria = it)
             }
+        }
+
+        composable("editColor/{idDaCategoria}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("idDaCategoria") ?: return@composable
+            EditCategoryColorScreen(navController, id)
         }
     }
 }
 
-fun getCategorias(userId: String, context: Context, onResult: (List<String>) -> Unit) {
+data class Categoria(
+    val id: String,
+    val nome: String
+)
+
+fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) -> Unit) {
     val db = Firebase.firestore
 
     db.collection("accounts")
@@ -88,10 +110,15 @@ fun getCategorias(userId: String, context: Context, onResult: (List<String>) -> 
         .collection("Categorias")
         .get()
         .addOnSuccessListener { result ->
-            val nomes = result.documents
-                .mapNotNull { it.getString("Nome") }
-                .filter { it != "Sites Web" }
-            onResult(nomes)
+            val categorias = result.documents
+                .mapNotNull { doc ->
+                    val nome = doc.getString("Nome")
+                    val id = doc.id
+                    if (nome != null && nome != "Sites Web") {
+                        Categoria(id = id, nome = nome)
+                    } else null
+                }
+            onResult(categorias)
         }
         .addOnFailureListener {
             Toast.makeText(context, "Erro ao buscar categorias no Firestore.", Toast.LENGTH_SHORT).show()
@@ -100,59 +127,39 @@ fun getCategorias(userId: String, context: Context, onResult: (List<String>) -> 
 }
 
 fun alterarCategoria(userId: String,
-                      categoriaAtual: String,
-                      novoNome: String,
-                      context: Context,
-                      onSuccess: () -> Unit = {},
-                      onFailure: () -> Unit = {}){
-    if (novoNome.isBlank()){
-        Toast.makeText(context, "Digite um novo nome.", Toast.LENGTH_SHORT).show()
-        return
-    }
-
+                     idCategoria: String,
+                     novoNome: String,
+                     novaCor: String,
+                     context: Context,
+                     navController: NavController,
+                     onSuccess: () -> Unit = {},
+                     onFailure: () -> Unit = {}){
     val db = Firebase.firestore
-    val categorias = db.collection("accounts")
+
+    val atualizacoes = mutableMapOf<String, Any>()
+
+    if (novoNome.isNotBlank()) atualizacoes["Nome"] = novoNome
+    if (novaCor.isNotBlank()) atualizacoes["Cor"] = novaCor
+
+    db.collection("accounts")
         .document(userId)
         .collection("Categorias")
-
-    val documentoAtual = categorias.document(categoriaAtual)
-    val documentoNovo = categorias.document(novoNome)
-
-    documentoAtual.get().addOnSuccessListener { snapshot ->
-        if (snapshot.exists()) {
-            val dados = snapshot.data ?: emptyMap<String, Any>()
-
-            val novosDados = dados.toMutableMap()
-            novosDados["Nome"] = novoNome
-
-            documentoNovo.set(novosDados).addOnSuccessListener {
-                documentoAtual.delete().addOnSuccessListener {
-                    Toast.makeText(context, "Categoria renomeada com sucesso!", Toast.LENGTH_SHORT)
-                        .show()
-                    onSuccess()
-                }.addOnFailureListener {
-                    Toast.makeText(context, "Erro ao excluir categoria antiga.", Toast.LENGTH_SHORT)
-                        .show()
-                    onFailure()
-                }
-            }.addOnFailureListener {
-                Toast.makeText(context, "Erro ao criar nova categoria.", Toast.LENGTH_SHORT).show()
-                onFailure()
-
-            }
-        } else {
-            Toast.makeText(context, "Categoria original não encontrada.", Toast.LENGTH_SHORT).show()
-            onFailure()
+        .document(idCategoria)
+        .update(atualizacoes)
+        .addOnSuccessListener {
+            Toast.makeText(context, "Categoria atualizada.", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
         }
-    }.addOnFailureListener {
-        Toast.makeText(context, "Erro ao acessar categoria atual.", Toast.LENGTH_SHORT).show()
-        onFailure()
-    }
+        .addOnFailureListener {
+            Toast.makeText(context, "Erro ao atualizar a categoria.", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
 }
 
 fun excluirCategoria(userId: String,
                      categoria: String,
                      context: Context,
+                     navController: NavController,
                      onSuccess: () -> Unit = {},
                      onFailure: () -> Unit = {}){
     val db = Firebase.firestore
@@ -172,6 +179,11 @@ fun excluirCategoria(userId: String,
         }
 }
 
+fun Color.toHex(): String {
+    val intColor = this.toArgb()
+    return "0x" + intColor.toUInt().toString(16).uppercase()
+}
+
 @SuppressLint("ContextCastToActivity")
 @Composable
 fun CategoriesListScreen(navController: NavController) {
@@ -182,7 +194,7 @@ fun CategoriesListScreen(navController: NavController) {
     val context = LocalContext.current
     val activity = LocalContext.current as? Activity
 
-    var categorias by remember { mutableStateOf<List<String>>(emptyList()) }
+    var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
 
     LaunchedEffect(uid) {
         uid?.let{
@@ -256,12 +268,12 @@ fun CategoriesListScreen(navController: NavController) {
             categorias.forEach{ categoria ->
                 TextButton(
                     onClick = {
-                        navController.navigate("editCategory/${categoria}")
+                        navController.navigate("editCategory/${categoria.id}")
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = categoria,
+                        text = categoria.nome,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 24.sp
                         ),
@@ -272,18 +284,43 @@ fun CategoriesListScreen(navController: NavController) {
                     )
                 }
             }
+
+
         }
     }
 }
 
 @Composable
-fun EditCategoryScreen(navController: NavController, categoria: String){
+fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     val context = LocalContext.current
     val user = Firebase.auth.currentUser
     val uid = user?.uid ?: return
 
+    var nomeAtual by remember { mutableStateOf("") }
     var novoNome by remember { mutableStateOf("") }
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val novaCorState = savedStateHandle?.getStateFlow("novaCor", "")
+
+    val novaCor by novaCorState?.collectAsState() ?: remember { mutableStateOf("") }
     var showPopUp by remember { mutableStateOf(false) }
+
+    val db = Firebase.firestore
+
+    LaunchedEffect(idDaCategoria) {
+        db.collection("accounts")
+            .document(uid)
+            .collection("Categorias")
+            .document(idDaCategoria)
+            .get()
+            .addOnSuccessListener { document ->
+                val nome = document.getString("Nome") ?: ""
+                nomeAtual = nome
+                novoNome = nome
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Erro ao carregar categoria.", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -314,7 +351,7 @@ fun EditCategoryScreen(navController: NavController, categoria: String){
 
             Spacer(modifier = Modifier.height(60.dp))
 
-            Text(text = "Alterar a categoria ${categoria}",
+            Text(text = "Alterar a categoria ${nomeAtual}",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontSize = 24.sp
                 ),
@@ -329,7 +366,9 @@ fun EditCategoryScreen(navController: NavController, categoria: String){
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {}
+                onClick = {
+                    navController.navigate("editColor/${idDaCategoria}")
+                }
             ) {
                 Text(
                     text = "Alterar cor"
@@ -339,18 +378,10 @@ fun EditCategoryScreen(navController: NavController, categoria: String){
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = { alterarCategoria(uid, categoria, novoNome, context)},
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primary)
-                    .height(50.dp)
-                    .padding(10.dp),
-                shape = RoundedCornerShape(50)
+                onClick = { alterarCategoria(uid, idDaCategoria, novoNome, novaCor, context, navController)}
             ) {
                 Text(
                     text = "Salvar",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
                 )
             }
 
@@ -358,11 +389,10 @@ fun EditCategoryScreen(navController: NavController, categoria: String){
 
             Button(
                 onClick = { showPopUp = true },
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.error)
-                    .height(50.dp)
-                    .padding(10.dp),
-                shape = RoundedCornerShape(50)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
             ) {
                 Text(
                     text = "Excluir",
@@ -381,7 +411,7 @@ fun EditCategoryScreen(navController: NavController, categoria: String){
                 confirmButton = {
                     TextButton(onClick = {
                         showPopUp = false
-                        excluirCategoria(uid, categoria, context)
+                        excluirCategoria(uid, idDaCategoria, context, navController)
                     }) {
                         Text("Sim")
                     }
@@ -392,6 +422,80 @@ fun EditCategoryScreen(navController: NavController, categoria: String){
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun EditCategoryColorScreen(navController: NavController, idDaCategoria: String){
+    val context = LocalContext.current
+    val user = Firebase.auth.currentUser
+    val uid = user?.uid ?: return
+
+    val controller = remember { ColorPickerController() }
+    var selectedColor by remember { mutableStateOf(Color.White) }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            ScreenBackButton(navController, context)
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = "Escolha uma nova cor",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HsvColorPicker(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                onColorChanged = {
+                    selectedColor = it.color
+                },
+                controller = controller
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = selectedColor
+                )
+            ){
+                Text(
+                    text = "Exemplo",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = AppColors.gunmetal
+                    )
+                )
+            }
+
+            Button(
+                onClick = {
+                    val colorHex = "0x" + selectedColor.toArgb().toUInt().toString(16).uppercase()
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("novaCor", colorHex)
+                    navController.popBackStack()
+                }
+            ) {
+                Text(
+                    text = "Continuar",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
