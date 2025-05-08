@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.SuperIDTheme
@@ -38,7 +39,12 @@ class LoginActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SuperIDTheme {
-                LoginPreview()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    LoginPreview()
+                }
             }
         }
     }
@@ -58,11 +64,13 @@ fun loginUser(
             Log.i("AUTH-TESTE", "LOGIN REALIZADO"+
                     "UID: ${task.result.user!!.uid}")
 
+            onSuccess()
             mudarTela(context, PrincipalScreenActivity::class.java)
-
         }else{
             Toast.makeText(context, "Erro: Login não realizado", Toast.LENGTH_LONG).show()
             Log.i("AUTH-TESTE","Login não realizado")
+
+            onFailure(task.exception ?: Exception("Erro desconhecido"))
         }
     }
 }
@@ -86,7 +94,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             activityBackButton(activity)
         }
@@ -104,6 +112,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         )
         {
             Spacer(modifier = Modifier.height(75.dp))
+
             Icon(
                 painter = painterResource(R.drawable.logo_superid_darkblue),
                 contentDescription = "Logo do Super ID",
@@ -113,8 +122,10 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Text("Acesse sua conta",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 24.sp,)
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Medium)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -128,8 +139,10 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 label = {
                     Text(
                         text = "Digite sua senha",
-                        fontSize = 12.sp,
-                        fontFamily = PoppinsFonts.regular
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Normal
+                        )
                     )
                 },
                 modifier = Modifier
@@ -150,11 +163,11 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     }
                 },
                 colors = TextFieldDefaults.textFieldColors(
-                    focusedIndicatorColor = AppColors.gunmetal,
-                    unfocusedIndicatorColor = AppColors.platinum,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     containerColor = Color.Transparent,
-                    focusedLabelColor = AppColors.gunmetal,
-                    cursorColor = AppColors.gunmetal
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -163,22 +176,24 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             loginError?.let {
                 Text(
                     "Email ou senha incorretos",
-                    color = Color.Red,
-                    fontSize = 12.sp
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 
             Text(
                 text = "Esqueci minha senha",
-                fontFamily = PoppinsFonts.regular,
-                fontSize = 16.sp,
-                color = AppColors.gunmetal,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .clickable {
-                        mudarTela(context, PasswordRecoveryActivity::class.java )
-                    }
+                color = Color.Blue,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier.clickable {
+                    mudarTela(context, PasswordRecoveryActivity::class.java)
+                }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -211,22 +226,22 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = AppColors.white,
+                        color = MaterialTheme.colorScheme.surface,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     Text(
                         text = "Entrar",
-                        fontFamily = PoppinsFonts.medium,
-                        fontSize = 16.sp,
-                        color = AppColors.platinum
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
         }
-
-
     }
 }
 

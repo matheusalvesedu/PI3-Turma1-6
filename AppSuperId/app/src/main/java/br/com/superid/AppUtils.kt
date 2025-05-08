@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -35,9 +36,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.superid.ui.theme.AppColors
 import io.github.cdimascio.dotenv.dotenv
+import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import java.util.Base64
+
+
 
 // Função para transicionar entre as telas
 fun mudarTela(context: Context, destination: Class<*>){
@@ -53,9 +58,11 @@ fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
         value = variavel,
         onValueChange = onValueChange,
         label = {
-            Text(text = texto,
+            Text(
+                text = texto,
                 fontSize = 12.sp,
-                fontFamily = PoppinsFonts.regular
+                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         modifier = Modifier
@@ -63,11 +70,11 @@ fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
             .padding(10.dp),
         singleLine = true,
         colors = TextFieldDefaults.textFieldColors(
-            focusedIndicatorColor = AppColors.gunmetal,
-            unfocusedIndicatorColor = AppColors.platinum,
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             containerColor = Color.Transparent,
-            focusedLabelColor = AppColors.gunmetal,
-            cursorColor = AppColors.gunmetal
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -82,9 +89,11 @@ fun passwordInputBox(variavel: String, onValueChange: (String) -> Unit, texto: S
         value = variavel,
         onValueChange = onValueChange,
         label = {
-            Text(text = texto,
+            Text(
+                text = texto,
                 fontSize = 12.sp,
-                fontFamily = PoppinsFonts.regular
+                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         },
         modifier = Modifier
@@ -104,11 +113,11 @@ fun passwordInputBox(variavel: String, onValueChange: (String) -> Unit, texto: S
             }
         },
         colors = TextFieldDefaults.textFieldColors(
-            focusedIndicatorColor = AppColors.gunmetal,
-            unfocusedIndicatorColor = AppColors.platinum,
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             containerColor = Color.Transparent,
-            focusedLabelColor = AppColors.gunmetal,
-            cursorColor = AppColors.gunmetal
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -121,9 +130,9 @@ fun activityBackButton(activity: Activity?){
     TopAppBar(
         modifier = Modifier.height(80.dp),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            titleContentColor = Color.Transparent,
-            navigationIconContentColor = AppColors.gunmetal
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary
         ),
         title = {},
         navigationIcon = {
@@ -144,9 +153,9 @@ fun ScreenBackButton(navController: NavController,context: Context){
     TopAppBar(
         modifier = Modifier.height(80.dp),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = AppColors.white,
-            titleContentColor = Color.Transparent,
-            navigationIconContentColor = AppColors.gunmetal
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary
         ),
         title = {},
         navigationIcon = {
@@ -161,33 +170,32 @@ fun ScreenBackButton(navController: NavController,context: Context){
 }
 
 // Função de criptografia
-fun aesEncryptWithKey(data: ByteArray): ByteArray{
-    val keyString = System.getenv("AES_KEY") ?: error("AES_KEY não encontrado.")
-    val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-    require(keyBytes.size == 32) { "AES_KEY deve ter 32 bytes para AES-256" }
+fun aesEncryptWithKey(data: String): String{
 
-    val secretKey = SecretKeySpec(keyBytes, "AES")
-    val iv = IvParameterSpec(ByteArray(16))
+    val key = SecretKeySpec(CryptoKey.getKey(), "AES")
 
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv)
+    val cipher = Cipher.getInstance("AES")
 
-    return cipher.doFinal(data)
+    cipher.init(Cipher.ENCRYPT_MODE, key)
+    val dataCripted = cipher.doFinal(data.toByteArray())
+
+    return Base64.getEncoder().encodeToString(dataCripted)
+
 }
 
 // Função de descriptografia
-fun aesDescryptWithKey(encryptedData: ByteArray): ByteArray{
-    val keyString = System.getenv("AES_KEY") ?: error("AES_KEY não encontrado.")
-    val keyBytes = keyString.toByteArray(Charsets.UTF_8)
-    require(keyBytes.size == 32) { "AES_KEY deve ter 32 bytes para AES-256" }
+fun aesDecryptWithKey(encryptedData: String): String{
 
-    val secretKey = SecretKeySpec(keyBytes, "AES")
-    val iv = IvParameterSpec(ByteArray(16))
+    val dataBaseByteArray = Base64.getDecoder().decode(encryptedData)
 
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
+    val key = SecretKeySpec(CryptoKey.getKey(), "AES")
 
-    return cipher.doFinal(encryptedData)
+    val cipher = Cipher.getInstance("AES")
+
+    cipher.init(Cipher.DECRYPT_MODE,key)
+    val dataDecrypted = cipher.doFinal(dataBaseByteArray)
+
+    return String(dataDecrypted)
 }
 
 val poppinsRegular = FontFamily(Font(R.font.poppins_regular))
@@ -199,3 +207,5 @@ object PoppinsFonts {
     val medium = poppinsMedium
     val bold = poppinsBold
 }
+
+
