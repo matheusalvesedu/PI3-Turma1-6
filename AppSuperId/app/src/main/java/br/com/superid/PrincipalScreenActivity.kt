@@ -50,7 +50,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 
-
 class PrincipalScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,7 +108,7 @@ fun Screen(
     var darkMode by remember { mutableStateOf(true) }
     val backgroundColor = if (darkMode) AppColors.gunmetal else Color.White
     val buttonColor = if (darkMode) AppColors.satinSheenGold else AppColors.platinum
-
+    var context = LocalContext.current
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -135,7 +134,9 @@ fun Screen(
             containerColor = backgroundColor,
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { },
+                    onClick = {
+                        mudarTela(context, CadastroSenhaActivity::class.java)
+                    },
                     containerColor = buttonColor,
                     modifier = Modifier.padding(16.dp)
                 ) {
