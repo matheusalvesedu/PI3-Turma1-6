@@ -95,4 +95,7 @@ dependencies {
     // libs do .env
     implementation(libs.dotenv.kotlin)
 
+    // libs do Google Fonts
+    implementation(libs.androidx.ui.text.google.fonts)
+
 }

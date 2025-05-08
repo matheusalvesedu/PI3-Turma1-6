@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -53,9 +54,11 @@ fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
         value = variavel,
         onValueChange = onValueChange,
         label = {
-            Text(text = texto,
+            Text(
+                text = texto,
                 fontSize = 12.sp,
-                fontFamily = PoppinsFonts.regular
+                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         modifier = Modifier
@@ -63,11 +66,11 @@ fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
             .padding(10.dp),
         singleLine = true,
         colors = TextFieldDefaults.textFieldColors(
-            focusedIndicatorColor = AppColors.gunmetal,
-            unfocusedIndicatorColor = AppColors.platinum,
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             containerColor = Color.Transparent,
-            focusedLabelColor = AppColors.gunmetal,
-            cursorColor = AppColors.gunmetal
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -82,9 +85,11 @@ fun passwordInputBox(variavel: String, onValueChange: (String) -> Unit, texto: S
         value = variavel,
         onValueChange = onValueChange,
         label = {
-            Text(text = texto,
+            Text(
+                text = texto,
                 fontSize = 12.sp,
-                fontFamily = PoppinsFonts.regular
+                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         },
         modifier = Modifier
@@ -104,11 +109,11 @@ fun passwordInputBox(variavel: String, onValueChange: (String) -> Unit, texto: S
             }
         },
         colors = TextFieldDefaults.textFieldColors(
-            focusedIndicatorColor = AppColors.gunmetal,
-            unfocusedIndicatorColor = AppColors.platinum,
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             containerColor = Color.Transparent,
-            focusedLabelColor = AppColors.gunmetal,
-            cursorColor = AppColors.gunmetal
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -121,9 +126,9 @@ fun activityBackButton(activity: Activity?){
     TopAppBar(
         modifier = Modifier.height(80.dp),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            titleContentColor = Color.Transparent,
-            navigationIconContentColor = AppColors.gunmetal
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary
         ),
         title = {},
         navigationIcon = {
@@ -144,9 +149,9 @@ fun ScreenBackButton(navController: NavController,context: Context){
     TopAppBar(
         modifier = Modifier.height(80.dp),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = AppColors.white,
-            titleContentColor = Color.Transparent,
-            navigationIconContentColor = AppColors.gunmetal
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary
         ),
         title = {},
         navigationIcon = {
