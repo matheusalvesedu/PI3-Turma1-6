@@ -431,31 +431,7 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                modifier = Modifier.height(80.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = Color.Transparent,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary
-                ),
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Voltar"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showPopUp = true }) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Excluir categoria"
-                        )
-                    }
-                }
-            )
+            ScreenBackButton(navController, context)
         }
     ) { innerPadding ->
         Column(
@@ -514,27 +490,6 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
                     text = "Salvar",
                 )
             }
-        }
-
-        if (showPopUp) {
-            AlertDialog(
-                onDismissRequest = { showPopUp = false },
-                title = { Text("Confirmar exclusão") },
-                text = { Text("Tem certeza de que deseja excluir esta categoria?") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showPopUp = false
-                        excluirCategoria(uid, idDaCategoria, context, navController)
-                    }) {
-                        Text("Sim")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showPopUp = false }) {
-                        Text("Cancelar")
-                    }
-                }
-            )
         }
     }
 }
