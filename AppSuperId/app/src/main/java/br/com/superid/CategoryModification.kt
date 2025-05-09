@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,27 +21,38 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Adb
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
@@ -90,9 +102,12 @@ fun CategoryModFlow(){
             }
         }
 
-        composable("editColor/{idDaCategoria}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("idDaCategoria") ?: return@composable
-            EditCategoryColorScreen(navController, id)
+        composable("newCategory") {
+            NewCategoryScreen(navController)
+        }
+
+        composable("editColor") {
+            EditCategoryColorScreen(navController)
         }
     }
 }
@@ -126,6 +141,36 @@ fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) 
         }
 }
 
+fun adicionarCategoria(
+    userId: String,
+    nome: String,
+    cor: String,
+    context: Context,
+    navController: NavController,
+    onSuccess: () -> Unit = {},
+    onFailure: () -> Unit = {}
+){
+    val db = Firebase.firestore
+
+    val novaCategoria = hashMapOf(
+        "Nome" to nome,
+        "Cor" to cor
+    )
+
+    db.collection("accounts")
+        .document(userId)
+        .collection("Categorias")
+        .add(novaCategoria)
+        .addOnSuccessListener {
+            Toast.makeText(context, "Categoria adicionada com sucesso.", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Falha ao adicionar categoria ao banco.", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
+}
+
 fun alterarCategoria(userId: String,
                      idCategoria: String,
                      novoNome: String,
@@ -133,7 +178,8 @@ fun alterarCategoria(userId: String,
                      context: Context,
                      navController: NavController,
                      onSuccess: () -> Unit = {},
-                     onFailure: () -> Unit = {}){
+                     onFailure: () -> Unit = {}
+){
     val db = Firebase.firestore
 
     val atualizacoes = mutableMapOf<String, Any>()
@@ -161,7 +207,8 @@ fun excluirCategoria(userId: String,
                      context: Context,
                      navController: NavController,
                      onSuccess: () -> Unit = {},
-                     onFailure: () -> Unit = {}){
+                     onFailure: () -> Unit = {}
+){
     val db = Firebase.firestore
     val document = db.collection("accounts")
         .document(userId)
@@ -172,6 +219,7 @@ fun excluirCategoria(userId: String,
         .addOnSuccessListener {
             Toast.makeText(context, "Categoria excluída.", Toast.LENGTH_SHORT).show()
             onSuccess
+            navController.popBackStack()
         }
         .addOnFailureListener {
             Toast.makeText(context, "Erro ao excluir categoria.", Toast.LENGTH_SHORT).show()
@@ -179,11 +227,7 @@ fun excluirCategoria(userId: String,
         }
 }
 
-fun Color.toHex(): String {
-    val intColor = this.toArgb()
-    return "0x" + intColor.toUInt().toString(16).uppercase()
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("ContextCastToActivity")
 @Composable
 fun CategoriesListScreen(navController: NavController) {
@@ -206,9 +250,7 @@ fun CategoriesListScreen(navController: NavController) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            activityBackButton(activity)
-        }
+        topBar = { activityBackButton(activity) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -230,24 +272,30 @@ fun CategoriesListScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            Text(text = "Escolha uma categoria para alterar:",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 24.sp
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(10.dp)
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Suas categorias",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 16.sp
+                    ),
+                    modifier = Modifier.weight(0.9f)
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "Suas senhas:",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp
-                ),
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp)
-            )
+                IconButton(
+                    onClick = {navController.navigate("newCategory")},
+                    modifier = Modifier.weight(0.1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Adicionar categoria"
+                    )
+                }
+            }
 
             TextButton(
                 onClick = { Toast.makeText(context, "Categoria não alterável." , Toast.LENGTH_LONG).show()},
@@ -256,7 +304,7 @@ fun CategoriesListScreen(navController: NavController) {
                 Text(
                     text = "Sites Web",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 24.sp
+                        fontSize = 20.sp
                     ),
                     textAlign = TextAlign.Start,
                     modifier = Modifier
@@ -275,7 +323,7 @@ fun CategoriesListScreen(navController: NavController) {
                     Text(
                         text = categoria.nome,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 24.sp
+                            fontSize = 20.sp
                         ),
                         textAlign = TextAlign.Start,
                         modifier = Modifier
@@ -284,12 +332,11 @@ fun CategoriesListScreen(navController: NavController) {
                     )
                 }
             }
-
-
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     val context = LocalContext.current
@@ -297,7 +344,7 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     val uid = user?.uid ?: return
 
     var nomeAtual by remember { mutableStateOf("") }
-    var novoNome by remember { mutableStateOf("") }
+    var novoNome by rememberSaveable { mutableStateOf("") }
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val novaCorState = savedStateHandle?.getStateFlow("novaCor", "")
 
@@ -315,7 +362,6 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
             .addOnSuccessListener { document ->
                 val nome = document.getString("Nome") ?: ""
                 nomeAtual = nome
-                novoNome = nome
             }
             .addOnFailureListener {
                 Toast.makeText(context, "Erro ao carregar categoria.", Toast.LENGTH_SHORT).show()
@@ -325,7 +371,31 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            ScreenBackButton(navController, context)
+            TopAppBar(
+                modifier = Modifier.height(80.dp),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AppColors.white,
+                    titleContentColor = Color.Transparent,
+                    navigationIconContentColor = AppColors.gunmetal
+                ),
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showPopUp = true }) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Excluir categoria"
+                        )
+                    }
+                }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -367,7 +437,7 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
 
             Button(
                 onClick = {
-                    navController.navigate("editColor/${idDaCategoria}")
+                    navController.navigate("editColor")
                 }
             ) {
                 Text(
@@ -382,23 +452,6 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
             ) {
                 Text(
                     text = "Salvar",
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { showPopUp = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                )
-            ) {
-                Text(
-                    text = "Excluir",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onError
-                    )
                 )
             }
         }
@@ -427,10 +480,86 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
 }
 
 @Composable
-fun EditCategoryColorScreen(navController: NavController, idDaCategoria: String){
+fun NewCategoryScreen(navController: NavController){
     val context = LocalContext.current
     val user = Firebase.auth.currentUser
     val uid = user?.uid ?: return
+
+    var nome by rememberSaveable { mutableStateOf("") }
+
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val novaCorState = savedStateHandle?.getStateFlow("novaCor", "")
+    val novaCor by novaCorState?.collectAsState() ?: remember { mutableStateOf("") }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            ScreenBackButton(navController, context)
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.logo_superid_darkblue),
+                    contentDescription = "Logo do Super ID",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
+            Text(
+                text = "Adicione uma nova categoria",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 24.sp
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            inputBox(nome, {novoNome -> nome = novoNome}, "Digite o nome")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    navController.navigate("editColor")
+                }
+            ) {
+                Text(
+                    text = "Alterar cor"
+                )
+            }
+
+            Button(
+                onClick = { adicionarCategoria(uid, nome, novaCor, context, navController) }
+            ) {
+                Text(
+                    text = "Salvar",
+                )
+            }
+
+        }
+    }
+}
+
+@Composable
+fun EditCategoryColorScreen(navController: NavController){
+    val context = LocalContext.current
 
     val controller = remember { ColorPickerController() }
     var selectedColor by remember { mutableStateOf(Color.White) }
