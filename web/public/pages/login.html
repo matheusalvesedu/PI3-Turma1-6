@@ -126,34 +126,26 @@
             const forms = document.querySelectorAll('.needs-validation');
 
             Array.from(forms).forEach(form => {
-                form.addEventListener('submit', event => {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        event.preventDefault();
-                        // Show success feedback
-                        const alertDiv = document.createElement('div');
-                        alertDiv.className = 'alert alert-success mt-3';
-                        alertDiv.setAttribute('role', 'alert');
-                        alertDiv.textContent = 'Login realizado com sucesso!';
-                        form.parentNode.insertBefore(alertDiv, form.nextSibling);
-                    }
-                    form.classList.add('was-validated');
-                }, false);
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                } else {
+                event.preventDefault();
+                // Show success feedback
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success mt-3';
+                alertDiv.setAttribute('role', 'alert');
+                alertDiv.textContent = 'Login realizado com sucesso!';
+                form.parentNode.insertBefore(alertDiv, form.nextSibling);
+                }
+                form.classList.add('was-validated');
+            }, false);
             });
 
             // SuperId login handler
             document.getElementById('superIdLogin').addEventListener('click', function () {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-info mt-3';
-                alertDiv.setAttribute('role', 'alert');
-                alertDiv.textContent = 'Redirecionando para autenticação SuperId...';
-                this.parentNode.appendChild(alertDiv);
-                // Simulate redirection
-                setTimeout(() => {
-                    alertDiv.textContent = 'Autenticação SuperId em andamento...';
-                }, 2000);
+            window.location.href = 'QRCode.html';
             });
         })();
 

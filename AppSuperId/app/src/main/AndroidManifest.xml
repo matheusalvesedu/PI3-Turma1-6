@@ -16,6 +16,21 @@
             android:name=".CategoryModification"
             android:exported="false"
             android:label="@string/title_activity_category_modification"
+            android:theme="@style/Theme.SuperID"/>
+        <activity
+            android:name=".ChangeOrDeleteActivity"
+            android:exported="false"
+            android:label="@string/title_activity_change_or_delete"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".ChangePassword"
+            android:exported="false"
+            android:label="@string/title_activity_change_password"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".CadastroSenhaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_cadastro_senha"
             android:theme="@style/Theme.SuperID" />
         <activity
             android:name=".PrincipalScreenActivity"

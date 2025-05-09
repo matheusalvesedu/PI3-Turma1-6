@@ -42,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,6 +61,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,7 +79,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
-
 
 class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,15 +113,42 @@ fun checkPasswordRequirements(password: String): PasswordRequirements{
 fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
 
     val db = Firebase.firestore
+    val UID = user!!.uid
 
     val userAccount = hashMapOf(
         "name" to name,
         "email" to email,
-        "firstAccess" to "true"
+        "firstAccess" to true
     )
 
-    db.collection("accounts").document(user!!.uid).set(userAccount)
+    val defaultCategories = listOf(
+        hashMapOf(
+            "Nome" to "Sites Web",
+            "Cor" to "0xFFCCA43B"
+        ),
+        hashMapOf(
+            "Nome" to "Aplicativos",
+            "Cor" to "0xFF3BBDCC"
+        ),
+        hashMapOf(
+            "Nome" to "Teclados de Acesso Físico",
+            "Cor" to "0xFF58CC3B"
+        )
+    )
+
+
+    db.collection("accounts").document(UID).set(userAccount)
         .addOnSuccessListener{
+
+            for (categoria in defaultCategories) {
+
+                val categoryName = categoria["Nome"] ?: "Categoria sem nome"
+
+                db.collection("accounts").document(UID).collection("Categorias")
+                    .add(categoria)
+
+            }
+
             Log.d("Firestore", "Informações da conta salva com sucesso!")
         }
         .addOnFailureListener{ e ->
@@ -185,37 +213,36 @@ fun PreviewSignUp(){
 @Composable
 fun SignUpFlow(){
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "name") {
+    SuperIDTheme {
+        NavHost(navController = navController, startDestination = "name") {
 
-        composable("name") { NameScreen(navController) }
+            composable("name") { NameScreen(navController) }
 
-        composable("email/{name}") { entry ->
-            entry.arguments?.getString("name")?.let { name ->
-                EmailScreen(navController,name)
+            composable("email/{name}") { entry ->
+                entry.arguments?.getString("name")?.let { name ->
+                    EmailScreen(navController,name)
+                }
             }
-        }
 
-        composable("password/{name}/{email}") { entry->
-            entry.arguments?.getString("name")?.let { name ->
-                entry.arguments?.getString("email")?.let{ email ->
-                    PasswordScreen(navController,name,email)
+            composable("password/{name}/{email}") { entry->
+                entry.arguments?.getString("name")?.let { name ->
+                    entry.arguments?.getString("email")?.let{ email ->
+                        PasswordScreen(navController,name,email)
+                    }
+                }
+
+            }
+
+            composable("verification/{name}/{email}"){ entry ->
+                entry.arguments?.getString("name")?.let { name->
+                    entry.arguments?.getString("email")?.let{ email ->
+                        VerificationScreen(navController,name,email)
+                    }
                 }
             }
 
         }
-
-        composable("verification/{name}/{email}"){ entry ->
-            entry.arguments?.getString("name")?.let { name->
-                entry.arguments?.getString("email")?.let{ email ->
-                    VerificationScreen(navController,name,email)
-                }
-            }
-        }
-
-        composable("home"){HomeScreen(navController)}
-
     }
-
 }
 
 @Composable
@@ -237,17 +264,18 @@ fun CheckBoxTermosUso(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
-                checkedColor = AppColors.gunmetal,
-                uncheckedColor = AppColors.jet
+                checkedColor = MaterialTheme.colorScheme.primary,
+                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
         )
 
         Text(
             text = "Ao prosseguir você concorda com os termos de uso do app.",
-            fontFamily = PoppinsFonts.medium,
-            fontSize = 10.sp,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
             textDecoration = TextDecoration.Underline,
-            color = AppColors.gunmetal,
             modifier = Modifier
                 .clickable { showPopUp = true }
         )
@@ -273,7 +301,7 @@ fun CheckBoxTermosUso(
                         "PUC-Campinas - Engenharia de Software") },
                 confirmButton = {
                     TextButton(onClick = { showPopUp = false }) {
-                        Text("Fechar", color = AppColors.gunmetal)
+                        Text("Fechar", color = MaterialTheme.colorScheme.primary)
                     }
                 },
                 modifier = Modifier.background(color = AppColors.white)
@@ -291,8 +319,8 @@ fun RequirementItem(text: String, isChecked: Boolean){
             enabled = false,
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
-                checkedColor = AppColors.gunmetal,
-                uncheckedColor = AppColors.jet
+                checkedColor = MaterialTheme.colorScheme.primary,
+                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
             modifier = Modifier.size(6.dp)
         )
@@ -301,9 +329,9 @@ fun RequirementItem(text: String, isChecked: Boolean){
 
         Text(
             text = text,
-            fontSize = 8.sp,
-            color = if (isChecked) AppColors.gunmetal else AppColors.jet,
-            fontFamily = PoppinsFonts.regular
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         )
     }
 }
@@ -316,7 +344,7 @@ fun NameScreen(navController: NavController){
     val activity = LocalContext.current as? Activity
 
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             activityBackButton(activity)
         },
@@ -332,8 +360,8 @@ fun NameScreen(navController: NavController){
                     onClick = { navController.navigate("email/$name") },
                     enabled = name.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (name.isNotBlank()) AppColors.gunmetal else AppColors.jet,
-                        contentColor = AppColors.white
+                        containerColor = if (name.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
@@ -342,9 +370,13 @@ fun NameScreen(navController: NavController){
 
                 ) {
                     Text(text = "Avançar",
-                        fontFamily = PoppinsFonts.medium,
-                        fontSize = 12.sp,
-                        color = if(name.isNotBlank()) AppColors.platinum else AppColors.gunmetal
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 14.sp
+                        ),
+                        color = if (name.isNotBlank())
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -353,7 +385,7 @@ fun NameScreen(navController: NavController){
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = AppColors.white)
+                .background(color = MaterialTheme.colorScheme.background)
                 .padding((innerPadding)),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -375,9 +407,11 @@ fun NameScreen(navController: NavController){
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(text = "Boas vindas ao Super ID!\nDigite seu nome completo:",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 24.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 24.sp
+                ),
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(10.dp)
@@ -403,7 +437,7 @@ fun EmailScreen(navController: NavController, name: String) {
     }
 
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ScreenBackButton(navController, context)
         },
@@ -418,8 +452,8 @@ fun EmailScreen(navController: NavController, name: String) {
                     onClick = { navController.navigate("password/$name/$email") },
                     enabled = email.isNotBlank() && isEmailValid,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (email.isNotBlank() && isEmailValid) AppColors.gunmetal else AppColors.jet,
-                        contentColor = AppColors.white
+                        containerColor = if (email.isNotBlank() && isEmailValid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
@@ -429,9 +463,10 @@ fun EmailScreen(navController: NavController, name: String) {
                 ) {
                     Text(
                         text = "Avançar",
-                        fontFamily = PoppinsFonts.medium,
-                        fontSize = 12.sp,
-                        color = if (email.isNotBlank() && isEmailValid) AppColors.platinum else AppColors.gunmetal
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 14.sp
+                        ),
+                        color = if (email.isNotBlank() && isEmailValid) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -440,7 +475,6 @@ fun EmailScreen(navController: NavController, name: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = AppColors.white)
                 .padding((innerPadding)),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -463,9 +497,10 @@ fun EmailScreen(navController: NavController, name: String) {
 
             Text(
                 text = "Agora, digite seu e-mail:",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 24.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 24.sp
+                ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(10.dp)
@@ -493,8 +528,8 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     // Delay visual na criação de conta
     var shouldNavigate by remember { mutableStateOf(false) }
     LaunchedEffect(shouldNavigate) {
-        if(shouldNavigate){
-            kotlinx.coroutines.delay(1500)
+        if (shouldNavigate) {
+            kotlinx.coroutines.delay(1000)
             navController.navigate("verification/$name/$email")
         }
     }
@@ -506,7 +541,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             passwordRequirements.hasMinLength
 
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ScreenBackButton(navController, context)
         }
@@ -514,7 +549,6 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = AppColors.white)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding((innerPadding)),
@@ -539,9 +573,10 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             Text(
                 text = "Agora, digite sua senha:",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 24.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 24.sp
+                ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(10.dp)
@@ -597,11 +632,11 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 enabled = password.isNotBlank() && isPasswordValid && password == passwordConfirm && termosAceitos,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (password.isNotBlank() &&
-                                        isPasswordValid &&
-                                        !shouldNavigate &&
-                                        password == passwordConfirm &&
-                                        termosAceitos) AppColors.gunmetal else AppColors.jet,
-                    contentColor = AppColors.white
+                        isPasswordValid &&
+                        !shouldNavigate &&
+                        password == passwordConfirm &&
+                        termosAceitos) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -611,20 +646,21 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             ) {
                 if(isLoading) {
                     CircularProgressIndicator(
-                        color = AppColors.white,
+                        color = MaterialTheme.colorScheme.surface,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     Text(
                         text = "Criar conta",
-                        fontFamily = PoppinsFonts.medium,
-                        fontSize = 30.sp,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 30.sp
+                        ),
                         color = if (password.isNotBlank() &&
-                                    isPasswordValid &&
-                                    !shouldNavigate &&
-                                    password == passwordConfirm &&
-                                    termosAceitos) AppColors.platinum else AppColors.gunmetal
+                            isPasswordValid &&
+                            !shouldNavigate &&
+                            password == passwordConfirm &&
+                            termosAceitos) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -637,6 +673,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
 
     var isVerified by remember { mutableStateOf(false) }
     val auth = Firebase.auth
+    var context = LocalContext.current
 
     LaunchedEffect(true) {
         while(!isVerified){
@@ -647,7 +684,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                navController.navigate("home")
+                mudarTela(context, PrincipalScreenActivity::class.java)
             }
 
             delay(3000)
@@ -659,7 +696,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = AppColors.white),
+            .background(color = MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -682,9 +719,10 @@ fun VerificationScreen(navController: NavController, name: String, email: String
 
         Text(
             text = "Verificação de endereço de e-mail",
-            fontFamily = PoppinsFonts.medium,
-            fontSize = 24.sp,
-            color = AppColors.gunmetal,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Medium,
+                fontSize = 24.sp
+            ),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(10.dp)
@@ -693,9 +731,10 @@ fun VerificationScreen(navController: NavController, name: String, email: String
         if(!isVerified){
             Text(
                 text = "Aguardando a verificação do e-mail...",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 16.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
+                ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(10.dp)
@@ -704,7 +743,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Spacer(modifier = Modifier.size(25.dp))
 
             CircularProgressIndicator(
-                color = AppColors.gunmetal,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(50.dp)
             )
@@ -713,9 +752,10 @@ fun VerificationScreen(navController: NavController, name: String, email: String
 
             Text(
                 text = "E-mail verificado!!",
-                fontFamily = PoppinsFonts.medium,
-                fontSize = 16.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
+                ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(10.dp)
@@ -726,16 +766,11 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Icon(
                 imageVector = Icons.Default.CheckCircleOutline,
                 contentDescription = "Verificado",
-                tint = AppColors.gunmetal,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(50.dp)
             )
 
         }
 
     }
-}
-
-@Composable
-fun HomeScreen(navController: NavController){
-    Text("teste")
 }
