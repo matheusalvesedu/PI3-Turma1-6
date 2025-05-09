@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Adb
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -218,12 +219,11 @@ fun excluirCategoria(userId: String,
     document.delete()
         .addOnSuccessListener {
             Toast.makeText(context, "Categoria excluída.", Toast.LENGTH_SHORT).show()
-            onSuccess
             navController.popBackStack()
+            navController.navigate("categoryList")
         }
         .addOnFailureListener {
             Toast.makeText(context, "Erro ao excluir categoria.", Toast.LENGTH_SHORT).show()
-            onFailure
         }
 }
 
@@ -233,10 +233,12 @@ fun excluirCategoria(userId: String,
 fun CategoriesListScreen(navController: NavController) {
     val auth = Firebase.auth
     val user = auth.currentUser
-    val uid = user?.uid
+    val uid = user?.uid ?: return
 
     val context = LocalContext.current
     val activity = LocalContext.current as? Activity
+
+    var showPopUp by remember { mutableStateOf(false) }
 
     var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
 
@@ -275,7 +277,7 @@ fun CategoriesListScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(40.dp))
 
             Row(
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -297,38 +299,95 @@ fun CategoriesListScreen(navController: NavController) {
                 }
             }
 
-            TextButton(
-                onClick = { Toast.makeText(context, "Categoria não alterável." , Toast.LENGTH_LONG).show()},
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
                 Text(
                     text = "Sites Web",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = 20.sp
                     ),
-                    textAlign = TextAlign.Start,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .weight(0.8f)
                 )
+
+                IconButton(
+                    onClick = { Toast.makeText(context, "Categoria não alterável." , Toast.LENGTH_LONG).show() },
+                    modifier = Modifier.weight(0.1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar categoria"
+                    )
+                }
+
+                IconButton(
+                    onClick = { Toast.makeText(context, "Categoria não excluível.", Toast.LENGTH_SHORT).show() },
+                    modifier = Modifier.weight(0.1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteOutline,
+                        contentDescription = "Excluir categoria"
+                    )
+                }
             }
 
             categorias.forEach{ categoria ->
-                TextButton(
-                    onClick = {
-                        navController.navigate("editCategory/${categoria.id}")
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
                     Text(
                         text = categoria.nome,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 20.sp
                         ),
-                        textAlign = TextAlign.Start,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                            .weight(0.8f)
+                    )
+
+                    IconButton(
+                        onClick = { navController.navigate("editCategory/${categoria.id}") },
+                        modifier = Modifier.weight(0.1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar categoria"
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { showPopUp = true },
+                        modifier = Modifier.weight(0.1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Excluir categoria"
+                        )
+                    }
+                }
+
+                if (showPopUp) {
+                    AlertDialog(
+                        onDismissRequest = { showPopUp = false },
+                        title = { Text("Confirmar exclusão") },
+                        text = { Text("Tem certeza de que deseja excluir esta categoria?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showPopUp = false
+                                excluirCategoria(uid, categoria.id, context, navController)
+                            }) {
+                                Text("Sim")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showPopUp = false }) {
+                                Text("Cancelar")
+                            }
+                        }
                     )
                 }
             }
@@ -345,10 +404,11 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
 
     var nomeAtual by remember { mutableStateOf("") }
     var novoNome by rememberSaveable { mutableStateOf("") }
+
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val novaCorState = savedStateHandle?.getStateFlow("novaCor", "")
-
     val novaCor by novaCorState?.collectAsState() ?: remember { mutableStateOf("") }
+
     var showPopUp by remember { mutableStateOf(false) }
 
     val db = Firebase.firestore
@@ -374,9 +434,9 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
             TopAppBar(
                 modifier = Modifier.height(80.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.white,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = Color.Transparent,
-                    navigationIconContentColor = AppColors.gunmetal
+                    navigationIconContentColor = MaterialTheme.colorScheme.primary
                 ),
                 title = {},
                 navigationIcon = {
