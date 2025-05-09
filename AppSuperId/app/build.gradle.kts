@@ -99,5 +99,7 @@ dependencies {
 
     // libs do Google Fonts
     implementation(libs.androidx.ui.text.google.fonts)
-
+    
+    // libs do Color Picker
+    implementation(libs.colorpicker.compose)
 }
