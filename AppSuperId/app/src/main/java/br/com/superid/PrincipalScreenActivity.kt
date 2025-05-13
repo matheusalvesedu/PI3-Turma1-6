@@ -43,12 +43,13 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.util.UnstableApi
+import com.google.android.material.transition.MaterialContainerTransform
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-
 
 class PrincipalScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,7 +85,9 @@ fun TelaPrincipalPreview() {
 fun Tela() {
     var searchQuery by remember { mutableStateOf("") }
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        Modifier.background(MaterialTheme.colorScheme.background)
+    ) { paddingValues ->
         Screen(
             modifier = Modifier.padding(paddingValues),
             searchQuery = searchQuery,
@@ -106,8 +109,6 @@ fun Screen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var darkMode by remember { mutableStateOf(true) }
-    val backgroundColor = if (darkMode) AppColors.gunmetal else Color.White
-    val buttonColor = if (darkMode) AppColors.satinSheenGold else AppColors.platinum
     var context = LocalContext.current
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -131,16 +132,18 @@ fun Screen(
                     onSearchQueryChange = onSearchQueryChange
                 )
             },
-            containerColor = backgroundColor,
+            containerColor = MaterialTheme.colorScheme.background,
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
                         mudarTela(context, CadastroSenhaActivity::class.java)
                     },
-                    containerColor = buttonColor,
-                    modifier = Modifier.padding(16.dp)
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp, end = 16.dp)
                 ) {
-                    Icon(Icons.Filled.Add, "Floating action button.")
+                    Icon(Icons.Filled.Add,
+                        "Floating action button.",
+                        tint = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         ) { paddingValues ->
@@ -161,7 +164,7 @@ fun DrawerContent(darkMode: Boolean) {
         modifier = Modifier
             .width(280.dp) // o quanto o Drawer abre
             .fillMaxHeight()
-            .background(backgroundColor)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -169,13 +172,13 @@ fun DrawerContent(darkMode: Boolean) {
         ) {
             Icon(
                 painter = painterResource(R.drawable.logo_superid_black),
-                tint = if (darkMode) AppColors.platinum else AppColors.jet,
+                tint = MaterialTheme.colorScheme.onSurface,
                 contentDescription = null,
                 modifier = Modifier.size(70.dp)
             )
             Text(
                 text = "SuperID",
-                color = if(darkMode) AppColors.platinum else AppColors.jet,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 24.sp,
                 modifier = Modifier.padding(16.dp)
             )
@@ -197,12 +200,12 @@ fun DrawerContent(darkMode: Boolean) {
                 )
             },
             selected = false,
-            onClick = { TODO() } ,
+            onClick = { /*TODO()*/ } ,
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = backgroundColor,
-                unselectedContainerColor = backgroundColor,
-                unselectedIconColor = if (darkMode) AppColors.platinum else AppColors.jet,
-                unselectedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
+                selectedContainerColor = MaterialTheme.colorScheme.surface,
+                unselectedContainerColor = MaterialTheme.colorScheme.surface,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
             )
         )
 
@@ -223,12 +226,12 @@ fun DrawerContent(darkMode: Boolean) {
                 )
             },
             selected = false,
-            onClick = { TODO() },
+            onClick = { /*TODO()*/ },
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = backgroundColor,
-                unselectedContainerColor = backgroundColor,
-                unselectedIconColor = if (darkMode) AppColors.platinum else AppColors.jet,
-                unselectedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
+                selectedContainerColor = MaterialTheme.colorScheme.surface,
+                unselectedContainerColor = MaterialTheme.colorScheme.surface,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
             )
         )
 
@@ -249,12 +252,12 @@ fun DrawerContent(darkMode: Boolean) {
                 )
             },
             selected = false,
-            onClick = { TODO() },
+            onClick = { /*TODO()*/ },
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = backgroundColor,
-                unselectedContainerColor = backgroundColor,
-                unselectedIconColor = if (darkMode) AppColors.platinum else AppColors.jet,
-                unselectedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
+                selectedContainerColor = MaterialTheme.colorScheme.surface,
+                unselectedContainerColor = MaterialTheme.colorScheme.surface,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurface,
             )
         )
 
@@ -358,10 +361,10 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
-            .height(200.dp)
+            .height(220.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(if (darkMode) AppColors.jet else AppColors.satinSheenGold)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
         Column(
             modifier = Modifier
@@ -378,7 +381,7 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
                 Text(
                     text = apelido,
                     style = MaterialTheme.typography.titleLarge,
-                    color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -403,7 +406,7 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Mais opções",
-                            tint = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -450,7 +453,7 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
             Text(
                 text = login,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 16.dp)
             )
 
@@ -459,7 +462,7 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
             Text(
                 text = senha,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 16.dp)
             )
 
@@ -468,7 +471,7 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
             Text(
                 text = descricao,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 16.dp)
             )
 
@@ -477,8 +480,8 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
             Text(
                 text = categoria,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (darkMode) AppColors.satinSheenGold else AppColors.gunmetal,
-                modifier = Modifier.padding(start = 16.dp)
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
         }
     }
@@ -504,7 +507,7 @@ fun TopBar(
             modifier = Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(100.dp)),
             scrollBehavior = scrollBehavior,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = if (darkMode) AppColors.jet else AppColors.platinum
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
             ),
             windowInsets = WindowInsets(0.dp),
             title = {
@@ -513,18 +516,18 @@ fun TopBar(
                     onValueChange = onSearchQueryChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
-                        Text("Procure por sua Senha", fontSize = 12.sp, color = if (darkMode) AppColors.platinum else AppColors.jet)
+                        Text("Procure por sua Senha", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(50.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
-                        unfocusedTextColor = if (darkMode) AppColors.platinum else AppColors.jet,
-                        cursorColor = if (darkMode) AppColors.satinSheenGold else AppColors.jet,
-                        focusedContainerColor = if (darkMode) AppColors.jet else AppColors.platinum,
-                        unfocusedContainerColor = if (darkMode) AppColors.jet else AppColors.platinum,
-                        focusedIndicatorColor = if (darkMode) AppColors.satinSheenGold else AppColors.jet,
-                        unfocusedIndicatorColor = if (darkMode) AppColors.satinSheenGold else AppColors.jet,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        cursorColor = MaterialTheme.colorScheme.onSurface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface,
                     )
                 )
             },
@@ -532,15 +535,14 @@ fun TopBar(
                 Icon(
                     imageVector = Icons.Rounded.Menu,
                     contentDescription = null,
-                    tint = if (darkMode) AppColors.platinum else AppColors.jet,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(start = 8.dp, end = 8.dp).size(27.dp).clickable { onOpenDrawrer() }
                 )
             },
             actions = {
-                Switch(darkMode = darkMode, onCheckedChange = onDarkModeChange)
                 Icon(
                     painter = painterResource(R.drawable.logo_superid_black),
-                    tint = if (darkMode) AppColors.platinum else AppColors.jet,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     contentDescription = null,
                     modifier = Modifier.size(42.dp)
                 )
@@ -549,28 +551,10 @@ fun TopBar(
     }
 }
 
-
-
-@Composable
-fun Switch(
-    darkMode: Boolean,
-    onCheckedChange: (Boolean) -> Unit // Função para alterar o estado do darkMode
-) {
-    Switch(
-        checked = darkMode,
-        onCheckedChange = onCheckedChange, // Alterando o estado com o callback
-        colors = SwitchDefaults.colors(
-            checkedThumbColor = Color(0xFF000000),
-            checkedTrackColor = AppColors.gunmetal,
-            uncheckedThumbColor = Color(0xFFFFFFFF),
-            uncheckedTrackColor = AppColors.satinSheenGold
-        )
-    )
-}
-
-
 @Composable
 fun RowFilter() {
+    var context = LocalContext.current
+
     val filtros = remember {
         mutableStateListOf(
             "Entretenimento" to Color(0xFFD1A740),
@@ -610,15 +594,15 @@ fun RowFilter() {
         }
 
         IconButton(
-            onClick = { /* ação do botão + */ },
+            onClick = { mudarTela(context, CategoryModification::class.java) },
             modifier = Modifier
                 .size(32.dp)
-                .background(Color(0xFFE0E0E0), shape = CircleShape)
+                .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Adicionar filtro",
-                tint = Color.Black,
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Editar filtros",
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(18.dp)
             )
         }

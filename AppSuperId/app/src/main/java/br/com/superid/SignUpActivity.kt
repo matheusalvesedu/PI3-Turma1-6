@@ -638,11 +638,10 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         termosAceitos) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
+                shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .width(300.dp)
-                    .height(80.dp)
-                    .padding(bottom = 20.dp)
+                    .height(50.dp)
             ) {
                 if(isLoading) {
                     CircularProgressIndicator(
@@ -653,8 +652,9 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 } else {
                     Text(
                         text = "Criar conta",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 30.sp
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
                         ),
                         color = if (password.isNotBlank() &&
                             isPasswordValid &&
