@@ -2,8 +2,10 @@ package br.com.superid
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -49,6 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
+import br.com.superid.ui.theme.onPrimaryContainerLight
+import br.com.superid.ui.theme.onPrimaryLight
+import br.com.superid.ui.theme.primaryContainerLight
+import br.com.superid.ui.theme.primaryLight
+import br.com.superid.ui.theme.tertiaryContainerLight
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -122,14 +130,48 @@ fun savePasswordToDb(
 
 }
 
+data class Categoria(
+    val id: String,
+    val nome: String
+)
+
+fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) -> Unit) {
+    val db = Firebase.firestore
+
+    db.collection("accounts")
+        .document(userId)
+        .collection("Categorias")
+        .get()
+        .addOnSuccessListener { result ->
+            val categorias = result.documents
+                .mapNotNull { doc ->
+                    val nome = doc.getString("Nome")
+                    val id = doc.id
+                    if (nome != null) {
+                        Categoria(id = id, nome = nome)
+                    } else null
+                }
+            onResult(categorias)
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Erro ao buscar categorias no Firestore.", Toast.LENGTH_SHORT).show()
+            onResult(emptyList())
+        }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDown(selectedText: String, onCategorySelected: (String) -> Unit){
-
-    val list = listOf("Sites Web","Aplicativos","Teclados de Acesso Físico")
+fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategorySelected: (String) -> Unit){
 
     var isExpanded by remember { mutableStateOf(false) }
+
+    var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        getCategorias(user.uid, context) { result ->
+            categorias = result
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -149,7 +191,8 @@ fun DropDown(selectedText: String, onCategorySelected: (String) -> Unit){
                 placeholder = {
                     Text(text = "Escolha sua categoria",
                         fontSize = 12.sp,
-                        fontFamily = PoppinsFonts.regular
+                        fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 modifier = Modifier
@@ -157,28 +200,28 @@ fun DropDown(selectedText: String, onCategorySelected: (String) -> Unit){
                     .padding(10.dp)
                     .menuAnchor(),
                 colors = TextFieldDefaults.textFieldColors(
-                    focusedIndicatorColor = AppColors.gunmetal,
-                    unfocusedIndicatorColor = AppColors.platinum,
+                    focusedIndicatorColor = primaryContainerLight,
+                    unfocusedIndicatorColor = onPrimaryContainerLight,
                     containerColor = Color.Transparent,
-                    focusedLabelColor = AppColors.gunmetal,
-                    cursorColor = AppColors.gunmetal
+                    focusedLabelColor = primaryContainerLight,
+                    cursorColor = primaryContainerLight
                 )
             )
 
             ExposedDropdownMenu(expanded = isExpanded, onDismissRequest = { isExpanded = false } ) {
-                list.forEach{ item ->
+                categorias.forEach{ item ->
                     DropdownMenuItem(
                         text = {
                             Text(
-                                item,
-                                fontFamily = PoppinsFonts.medium,
-                                fontSize = 12.sp,
-                                color = AppColors.gunmetal
+                                item.nome,
+                                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 12.sp
                             )
                         },
                         onClick = {
 
-                            onCategorySelected(item)
+                            onCategorySelected(item.nome)
                             isExpanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
@@ -208,17 +251,18 @@ fun CadastroSenhaScreen(){
 
     var shouldNavigate by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
     val activity = LocalContext.current as? Activity
 
     LaunchedEffect(shouldNavigate) {
         if(shouldNavigate){
             kotlinx.coroutines.delay(1500)
-            //adicionar rota futura
+            mudarTela(context, PrincipalScreenActivity::class.java)
         }
     }
 
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = onPrimaryLight,
         topBar = {
             activityBackButton(activity)
         }
@@ -226,7 +270,7 @@ fun CadastroSenhaScreen(){
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = AppColors.white)
+                .background(onPrimaryLight)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding((innerPadding)),
@@ -234,52 +278,40 @@ fun CadastroSenhaScreen(){
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.logo_superid_darkblue),
-                    contentDescription = "Logo do Super ID",
-                    modifier = Modifier
-                        .size(100.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(60.dp))
 
             Text(
                 text = "Cadastre uma nova senha:",
-                fontFamily = PoppinsFonts.medium,
+                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
                 fontSize = 24.sp,
-                color = AppColors.gunmetal,
+                color = primaryLight,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .padding(10.dp)
+                    .padding(20.dp)
             )
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
             inputBox(passwordNickName,{ newPasswordNickName -> passwordNickName = newPasswordNickName },"Digite um apelido para a senha")
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
             inputBox(login,{ newlogin -> login = newlogin },"Digite seu login (opcional)")
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
             passwordInputBox(password, { newPassword -> password = newPassword }, "Digite sua senha")
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
             inputBox(description,{ newDescription -> description = newDescription},"Digite sua descrição (opcional)")
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
-            DropDown(category, onCategorySelected = { newCategory -> category = newCategory})
+            if(user != null){
+                DropDown(user,context,category, onCategorySelected = { newCategory -> category = newCategory})
+            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = {
@@ -292,15 +324,20 @@ fun CadastroSenhaScreen(){
                             password,
                             description,
                             category,
-                            onSuccess = { shouldNavigate = true },
-                            onFailure = { /* Tratar erro */ }
+                            onSuccess = {
+                                Toast.makeText(context, "Nova senha cadastrada com sucesso", Toast.LENGTH_LONG).show()
+                                shouldNavigate = true
+                            },
+                            onFailure = {  Toast.makeText(context, "Erro ao cadastrar uma nova senha\nTente Novamente.", Toast.LENGTH_LONG).show() }
                         )
                     }
                 },
                 enabled = password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank()) AppColors.gunmetal else AppColors.jet,
-                    contentColor = AppColors.white
+                    containerColor = if (password.isNotBlank() &&
+                        passwordNickName.isNotBlank() &&
+                        category.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -310,20 +347,24 @@ fun CadastroSenhaScreen(){
             ) {
                 if(isLoading) {
                     CircularProgressIndicator(
-                        color = AppColors.white,
+                        color = MaterialTheme.colorScheme.surface,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     Text(
-                        text = "Salvar novo login",
-                        fontFamily = PoppinsFonts.medium,
-                        fontSize = 20.sp,
-                        color = if (password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank()) AppColors.platinum else AppColors.gunmetal
+                        text = "Salvar nova senha",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 20.sp
+                        ),
+                        color = if (
+                            password.isNotBlank() &&
+                            passwordNickName.isNotBlank() &&
+                            category.isNotBlank()
+                        ) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
         }
     }
 }
-

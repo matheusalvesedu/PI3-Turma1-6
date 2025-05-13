@@ -77,6 +77,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
     var activity = LocalActivity.current
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
+    val user = FirebaseAuth.getInstance().currentUser
     val userId = FirebaseAuth.getInstance().currentUser?.uid
 
     var login by remember { mutableStateOf("") }
@@ -168,7 +169,9 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            DropDown(category, onCategorySelected = { newCategory -> category = newCategory })
+            if(user != null){
+                DropDown(user,context,category, onCategorySelected = { newCategory -> category = newCategory })
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
