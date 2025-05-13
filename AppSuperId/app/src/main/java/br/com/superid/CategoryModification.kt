@@ -113,35 +113,6 @@ fun CategoryModFlow(){
     }
 }
 
-data class Categoria(
-    val id: String,
-    val nome: String
-)
-
-fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) -> Unit) {
-    val db = Firebase.firestore
-
-    db.collection("accounts")
-        .document(userId)
-        .collection("Categorias")
-        .get()
-        .addOnSuccessListener { result ->
-            val categorias = result.documents
-                .mapNotNull { doc ->
-                    val nome = doc.getString("Nome")
-                    val id = doc.id
-                    if (nome != null && nome != "Sites Web") {
-                        Categoria(id = id, nome = nome)
-                    } else null
-                }
-            onResult(categorias)
-        }
-        .addOnFailureListener {
-            Toast.makeText(context, "Erro ao buscar categorias no Firestore.", Toast.LENGTH_SHORT).show()
-            onResult(emptyList())
-        }
-}
-
 fun adicionarCategoria(
     userId: String,
     nome: String,
@@ -335,38 +306,40 @@ fun CategoriesListScreen(navController: NavController) {
             }
 
             categorias.forEach{ categoria ->
-                Row(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    Text(
-                        text = categoria.nome,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 20.sp
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(0.8f)
-                    )
-
-                    IconButton(
-                        onClick = { navController.navigate("editCategory/${categoria.id}") },
-                        modifier = Modifier.weight(0.1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Editar categoria"
+                if (categoria.nome != "Sites Web"){
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Text(
+                            text = categoria.nome,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 20.sp
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(0.8f)
                         )
-                    }
 
-                    IconButton(
-                        onClick = { showPopUp = true },
-                        modifier = Modifier.weight(0.1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Excluir categoria"
-                        )
+                        IconButton(
+                            onClick = { navController.navigate("editCategory/${categoria.id}") },
+                            modifier = Modifier.weight(0.1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar categoria"
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { showPopUp = true },
+                            modifier = Modifier.weight(0.1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteOutline,
+                                contentDescription = "Excluir categoria"
+                            )
+                        }
                     }
                 }
 

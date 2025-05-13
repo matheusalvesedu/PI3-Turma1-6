@@ -130,35 +130,6 @@ fun savePasswordToDb(
 
 }
 
-data class Categoria(
-    val id: String,
-    val nome: String
-)
-
-fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) -> Unit) {
-    val db = Firebase.firestore
-
-    db.collection("accounts")
-        .document(userId)
-        .collection("Categorias")
-        .get()
-        .addOnSuccessListener { result ->
-            val categorias = result.documents
-                .mapNotNull { doc ->
-                    val nome = doc.getString("Nome")
-                    val id = doc.id
-                    if (nome != null) {
-                        Categoria(id = id, nome = nome)
-                    } else null
-                }
-            onResult(categorias)
-        }
-        .addOnFailureListener {
-            Toast.makeText(context, "Erro ao buscar categorias no Firestore.", Toast.LENGTH_SHORT).show()
-            onResult(emptyList())
-        }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategorySelected: (String) -> Unit){
@@ -249,20 +220,11 @@ fun CadastroSenhaScreen(){
 
     var isLoading by remember { mutableStateOf(false) }
 
-    var shouldNavigate by remember { mutableStateOf(false) }
-
     val context = LocalContext.current
     val activity = LocalContext.current as? Activity
 
-    LaunchedEffect(shouldNavigate) {
-        if(shouldNavigate){
-            kotlinx.coroutines.delay(1500)
-            mudarTela(context, PrincipalScreenActivity::class.java)
-        }
-    }
-
     Scaffold(
-        containerColor = onPrimaryLight,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             activityBackButton(activity)
         }
@@ -270,10 +232,10 @@ fun CadastroSenhaScreen(){
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(onPrimaryLight)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
-                .padding((innerPadding)),
+                .padding(innerPadding),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -281,9 +243,10 @@ fun CadastroSenhaScreen(){
 
             Text(
                 text = "Cadastre uma nova senha:",
-                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                fontSize = 24.sp,
-                color = primaryLight,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.primary
+                ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(20.dp)
@@ -326,7 +289,7 @@ fun CadastroSenhaScreen(){
                             category,
                             onSuccess = {
                                 Toast.makeText(context, "Nova senha cadastrada com sucesso", Toast.LENGTH_LONG).show()
-                                shouldNavigate = true
+                                activity?.finish()
                             },
                             onFailure = {  Toast.makeText(context, "Erro ao cadastrar uma nova senha\nTente Novamente.", Toast.LENGTH_LONG).show() }
                         )
@@ -336,7 +299,8 @@ fun CadastroSenhaScreen(){
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (password.isNotBlank() &&
                         passwordNickName.isNotBlank() &&
-                        category.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        category.isNotBlank()) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 modifier = Modifier
@@ -361,7 +325,8 @@ fun CadastroSenhaScreen(){
                             password.isNotBlank() &&
                             passwordNickName.isNotBlank() &&
                             category.isNotBlank()
-                        ) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                        ) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

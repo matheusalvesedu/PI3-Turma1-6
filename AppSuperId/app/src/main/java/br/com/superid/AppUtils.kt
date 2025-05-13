@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -35,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.superid.ui.theme.AppColors
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import io.github.cdimascio.dotenv.dotenv
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -196,6 +199,37 @@ fun aesDecryptWithKey(encryptedData: String): String{
     val dataDecrypted = cipher.doFinal(dataBaseByteArray)
 
     return String(dataDecrypted)
+}
+
+// Objeto para armazenar as informações das categorias
+data class Categoria(
+    val id: String,
+    val nome: String
+)
+
+// Função para pegar as categorias do banco de dados e adicionar ao objeto Categoria
+fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) -> Unit) {
+    val db = Firebase.firestore
+
+    db.collection("accounts")
+        .document(userId)
+        .collection("Categorias")
+        .get()
+        .addOnSuccessListener { result ->
+            val categorias = result.documents
+                .mapNotNull { doc ->
+                    val nome = doc.getString("Nome")
+                    val id = doc.id
+                    if (nome != null) {
+                        Categoria(id = id, nome = nome)
+                    } else null
+                }
+            onResult(categorias)
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Erro ao buscar categorias no Firestore.", Toast.LENGTH_SHORT).show()
+            onResult(emptyList())
+        }
 }
 
 val poppinsRegular = FontFamily(Font(R.font.poppins_regular))

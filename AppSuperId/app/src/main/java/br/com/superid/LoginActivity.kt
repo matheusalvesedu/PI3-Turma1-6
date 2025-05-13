@@ -100,7 +100,6 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         }
     )
     { innerPadding ->
-        Spacer(modifier = Modifier.height(10.dp))
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,8 +110,6 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Top
         )
         {
-            Spacer(modifier = Modifier.height(75.dp))
-
             Icon(
                 painter = painterResource(R.drawable.logo_superid_darkblue),
                 contentDescription = "Logo do Super ID",
@@ -186,17 +183,18 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
             Text(
                 text = "Esqueci minha senha",
-                color = Color.Blue,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 ),
+                textDecoration = TextDecoration.Underline,
                 modifier = Modifier.clickable {
                     mudarTela(context, PasswordRecoveryActivity::class.java)
                 }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
@@ -221,7 +219,8 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     .height(50.dp),
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (email.isNotBlank() && password.isNotBlank() && isEmailValid) AppColors.gunmetal else AppColors.jet
+                    containerColor = if (email.isNotBlank() && password.isNotBlank() && isEmailValid) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
                 if (isLoading) {
@@ -237,7 +236,8 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         ),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = if (email.isNotBlank() && password.isNotBlank() && isEmailValid) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.primary
                     )
                 }
             }
