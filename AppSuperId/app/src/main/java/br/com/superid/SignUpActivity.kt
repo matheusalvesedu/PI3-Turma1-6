@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.devicelock.DeviceId
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
@@ -110,7 +112,8 @@ fun checkPasswordRequirements(password: String): PasswordRequirements{
     )
 }
 
-fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
+@SuppressLint("HardwareIds")
+fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String, deviceId: String){
 
     val db = Firebase.firestore
     val UID = user!!.uid
@@ -118,7 +121,8 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
     val userAccount = hashMapOf(
         "name" to name,
         "email" to email,
-        "firstAccess" to true
+        "firstAccess" to true,
+        "deviceId" to deviceId
     )
 
     val defaultCategories = listOf(
@@ -141,8 +145,6 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
         .addOnSuccessListener{
 
             for (categoria in defaultCategories) {
-
-                val categoryName = categoria["Nome"] ?: "Categoria sem nome"
 
                 db.collection("accounts").document(UID).collection("Categorias")
                     .add(categoria)
@@ -175,6 +177,7 @@ fun createUser(
     email: String,
     password: String,
     context: Context,
+    deviceId: String,
     onSuccess: () -> Unit,
     onFailure: () -> Unit
 ) {
@@ -187,7 +190,7 @@ fun createUser(
 
                 val user = auth.currentUser
 
-                saveNewAccountToDB(user,name,email)
+                saveNewAccountToDB(user,name,email,deviceId)
                 sendEmailVerification(user,context)
                 onSuccess()
 
@@ -514,6 +517,7 @@ fun EmailScreen(navController: NavController, name: String) {
     }
 }
 
+@SuppressLint("HardwareIds")
 @Composable
 fun PasswordScreen(navController: NavController, name: String, email: String) {
 
@@ -521,7 +525,9 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     var passwordConfirm by remember { mutableStateOf("") }
     val passwordRequirements = checkPasswordRequirements(password)
     var termosAceitos by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+    val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
     var isLoading by remember { mutableStateOf(false) }
 
@@ -620,6 +626,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         email,
                         password,
                         context,
+                        deviceId,
                         onSuccess = {shouldNavigate = true},
                         onFailure = {
                             isLoading = false
