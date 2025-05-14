@@ -521,9 +521,6 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
 }
 
 
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
