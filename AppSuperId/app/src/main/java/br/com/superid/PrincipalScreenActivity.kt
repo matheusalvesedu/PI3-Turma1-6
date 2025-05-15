@@ -63,7 +63,7 @@ class PrincipalScreenActivity : ComponentActivity() {
         }
     }
 }
-//TODO ligar a CadastroSenhaActivity no botão de adicionar senha
+
 data class SenhaData(
     val apelido: String = "",
     val login: String = "",
@@ -375,7 +375,7 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
             CardItem(
                 apelido = item.apelido,
                 login = "Login: ${item.login}",
-                senha = "Password: ${item.senha}",
+                senha = "Password: ${aesDecryptWithKey(item.senha)}",
                 descricao = "Descrição: ${item.descricao}",
                 categoria = "Categoria: ${item.categoria}",
                 idSenha = item.id,

@@ -7,32 +7,11 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,11 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-
 
 class ChangeOrDeleteActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,7 +31,7 @@ class ChangeOrDeleteActivity : ComponentActivity() {
         setContent {
             SuperIDTheme {
                 val senhaId = intent.getStringExtra("senhaId") ?: ""
-                ChangePasswordPreview(senhaId ?: "")
+                ChangePasswordPreview(senhaId)
             }
         }
     }
@@ -62,28 +39,35 @@ class ChangeOrDeleteActivity : ComponentActivity() {
 
 @Preview
 @Composable
-fun ChangePasswordPreview(senhaId: String = ""){
-    ChangePassword(senhaId = senhaId,modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center))
+fun ChangePasswordPreview(senhaId: String = "") {
+    ChangePassword(
+        senhaId = senhaId,
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.Center)
+    )
 }
 
 @Composable
-fun ChangePassword(senhaId: String, modifier: Modifier){
+fun ChangePassword(senhaId: String, modifier: Modifier) {
 
     var nPassword by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-    var shouldNavigate by remember { mutableStateOf(false) }
-    var activity = LocalActivity.current
+
+
+    val activity = LocalActivity.current
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
     val user = FirebaseAuth.getInstance().currentUser
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    val userId = user?.uid
 
     var login by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
+    var apelidocategoria by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         if (userId != null) {
@@ -94,20 +78,21 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
 
             docRef.get().addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
+                    apelidocategoria = document.getString("Apelido da senha") ?: ""
                     login = document.getString("login") ?: ""
                     senha = document.getString("senha") ?: ""
                     descricao = document.getString("descrição") ?: ""
                     categoria = document.getString("categoria") ?: ""
+
+                    description = descricao
+                    category = categoria
                 }
             }
         }
     }
 
-
-
-
     Scaffold(
-        containerColor = AppColors.white,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             activityBackButton(activity)
         }
@@ -115,24 +100,23 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = AppColors.white)
+                .background(color = MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
-                .padding((innerPadding)),
+                .padding(innerPadding),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(R.drawable.logo_superid_darkblue),
                     contentDescription = "Logo do Super ID",
-                    modifier = Modifier
-                        .size(100.dp)
+                    modifier = Modifier.size(100.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -140,18 +124,26 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
 
             Text(
                 text = "Alterar Senha",
-                fontFamily = PoppinsFonts.medium,
                 fontSize = 24.sp,
-                color = AppColors.gunmetal,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(10.dp)
+                modifier = Modifier.padding(10.dp)
             )
 
             Spacer(modifier = Modifier.size(16.dp))
 
+            inputBox(
+                apelidocategoria,
+                { newApelido -> apelidocategoria = newApelido },
+                "Digite um apelido para a senha"
+            )
 
-            Spacer(modifier = Modifier.size(16.dp))
+            inputBox(
+                login,
+                { newLogin -> login = newLogin},
+                "Digite seu novo login"
+            )
 
             passwordInputBox(
                 nPassword,
@@ -169,8 +161,10 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            if(user != null){
-                DropDown(user,context,category, onCategorySelected = { newCategory -> category = newCategory })
+            if (user != null) {
+                DropDown(user, context, category) { newCategory ->
+                    category = newCategory
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -178,6 +172,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
             Button(
                 onClick = {
                     if (userId != null) {
+                        isLoading = true
                         senha = nPassword
                         db.collection("accounts")
                             .document(userId)
@@ -185,25 +180,27 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
                             .document(senhaId)
                             .update(
                                 mapOf(
+                                    "Apelido da senha" to apelidocategoria,
                                     "login" to login,
-                                    "senha" to senha,
+                                    "senha" to aesEncryptWithKey(senha),
                                     "descrição" to description,
                                     "categoria" to category
                                 )
                             )
                             .addOnSuccessListener {
-                                Toast.makeText(context, "Senha atualizada!", Toast.LENGTH_SHORT)
+                                Toast
+                                    .makeText(context, "Senha atualizada!", Toast.LENGTH_SHORT)
                                     .show()
                                 mudarTela(context, PrincipalScreenActivity::class.java)
                             }
                     }
-
-                }
-
-                ,
+                },
+                enabled = nPassword.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (nPassword.isNotBlank()) AppColors.gunmetal else AppColors.jet,
-                    contentColor = AppColors.white
+                    containerColor = if (nPassword.isNotBlank())
+                        MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -213,21 +210,25 @@ fun ChangePassword(senhaId: String, modifier: Modifier){
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = AppColors.white,
+                        color = MaterialTheme.colorScheme.surface,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     Text(
                         text = "Salvar",
-                        fontFamily = PoppinsFonts.medium,
                         fontSize = 20.sp,
-                        color = if (nPassword.isNotBlank() && !shouldNavigate) AppColors.platinum else AppColors.gunmetal
+                        style = MaterialTheme.typography.titleLarge
+                    ,
+                    color = if (
+                        nPassword.isNotBlank() &&
+                        description.isNotBlank() &&
+                        category.isNotBlank()
+                    ) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
-
         }
     }
 }
-
