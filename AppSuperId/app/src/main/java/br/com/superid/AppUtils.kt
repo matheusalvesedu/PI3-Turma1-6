@@ -53,6 +53,14 @@ fun mudarTela(context: Context, destination: Class<*>){
     context.startActivity(intent)
 }
 
+fun mudarTelaFinish(context: Context, destination: Class<*>){
+    val intent = Intent(context, destination)
+    context.startActivity(intent)
+    if (context is Activity) {
+        context.finish()
+    }
+}
+
 // Função para criar caixas com input
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

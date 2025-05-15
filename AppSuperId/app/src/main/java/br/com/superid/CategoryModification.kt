@@ -124,9 +124,15 @@ fun adicionarCategoria(
 ){
     val db = Firebase.firestore
 
+    var novaCor = cor
+
+    if(novaCor == ""){
+        novaCor = "0xFFFFFFFF"
+    }
+
     val novaCategoria = hashMapOf(
         "Nome" to nome,
-        "Cor" to cor
+        "Cor" to novaCor
     )
 
     db.collection("accounts")
@@ -175,7 +181,7 @@ fun alterarCategoria(userId: String,
 }
 
 fun excluirCategoria(userId: String,
-                     categoria: String,
+                     idCategoria: String,
                      context: Context,
                      navController: NavController,
                      onSuccess: () -> Unit = {},
@@ -185,7 +191,7 @@ fun excluirCategoria(userId: String,
     val document = db.collection("accounts")
         .document(userId)
         .collection("Categorias")
-        .document(categoria)
+        .document(idCategoria)
 
     document.delete()
         .addOnSuccessListener {
@@ -209,7 +215,7 @@ fun CategoriesListScreen(navController: NavController) {
     val context = LocalContext.current
     val activity = LocalContext.current as? Activity
 
-    var showPopUp by remember { mutableStateOf(false) }
+    var categoriaParaExcluir by remember { mutableStateOf<Categoria?>(null) }
 
     var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
 
@@ -332,7 +338,7 @@ fun CategoriesListScreen(navController: NavController) {
                         }
 
                         IconButton(
-                            onClick = { showPopUp = true },
+                            onClick = { categoriaParaExcluir = categoria },
                             modifier = Modifier.weight(0.1f)
                         ) {
                             Icon(
@@ -343,21 +349,21 @@ fun CategoriesListScreen(navController: NavController) {
                     }
                 }
 
-                if (showPopUp) {
+                if (categoriaParaExcluir != null) {
                     AlertDialog(
-                        onDismissRequest = { showPopUp = false },
+                        onDismissRequest = { categoriaParaExcluir = null },
                         title = { Text("Confirmar exclusão") },
                         text = { Text("Tem certeza de que deseja excluir esta categoria?") },
                         confirmButton = {
                             TextButton(onClick = {
-                                showPopUp = false
-                                excluirCategoria(uid, categoria.id, context, navController)
+                                excluirCategoria(uid, categoriaParaExcluir!!.id, context, navController)
+                                categoriaParaExcluir = null
                             }) {
                                 Text("Sim")
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { showPopUp = false }) {
+                            TextButton(onClick = { categoriaParaExcluir = null }) {
                                 Text("Cancelar")
                             }
                         }
@@ -381,8 +387,6 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val novaCorState = savedStateHandle?.getStateFlow("novaCor", "")
     val novaCor by novaCorState?.collectAsState() ?: remember { mutableStateOf("") }
-
-    var showPopUp by remember { mutableStateOf(false) }
 
     val db = Firebase.firestore
 

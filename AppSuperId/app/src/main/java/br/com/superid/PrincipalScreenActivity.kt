@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,9 +48,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.util.UnstableApi
-import com.google.android.material.transition.MaterialContainerTransform
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 class PrincipalScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +63,7 @@ class PrincipalScreenActivity : ComponentActivity() {
         }
     }
 }
-//TODO ligar a CadastroSenhaActivity no botão de adicionar senha
+
 data class SenhaData(
     val apelido: String = "",
     val login: String = "",
@@ -72,11 +73,17 @@ data class SenhaData(
     val id: String = ""
 )
 
+data class CategoriaData(
+    val nomeCategoria: String,
+    val corCategoria: String // ou Color se quiser já convertido
+)
+
+
 
 @Preview
 @Composable
 fun TelaPrincipalPreview() {
-    Box(modifier = Modifier.height(800.dp)) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Tela()
     }
 }
@@ -108,12 +115,11 @@ fun Screen(
     )
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var darkMode by remember { mutableStateOf(true) }
     var context = LocalContext.current
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet { DrawerContent(darkMode = darkMode) }
+            ModalDrawerSheet { DrawerContent() }
         }
     ) {
         Scaffold(
@@ -126,8 +132,6 @@ fun Screen(
                             drawerState.apply { if (isClosed) open() else close() }
                         }
                     },
-                    darkMode = darkMode,
-                    onDarkModeChange = { darkMode = it },
                     searchQuery = searchQuery,
                     onSearchQueryChange = onSearchQueryChange
                 )
@@ -149,7 +153,6 @@ fun Screen(
         ) { paddingValues ->
             ScreenContent(
                 paddingValues = paddingValues,
-                darkMode = darkMode,
                 searchQuery = searchQuery
             )
         }
@@ -157,8 +160,7 @@ fun Screen(
 }
 
 @Composable
-fun DrawerContent(darkMode: Boolean) {
-    val backgroundColor = if (darkMode) AppColors.jet else AppColors.platinum
+fun DrawerContent() {
 
     Column(
         modifier = Modifier
@@ -266,8 +268,9 @@ fun DrawerContent(darkMode: Boolean) {
 }
 
 @Composable
-fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean, searchQuery: String) {
+fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
     val senhas = remember { mutableStateListOf<SenhaData>() }
+    val categorias = remember { mutableStateListOf<CategoriaData>() }
     val db = FirebaseFirestore.getInstance()
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val context = LocalContext.current
@@ -293,6 +296,38 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean, searchQuery: 
                 }
         }
     }
+
+    // Carregar os dados das categorias
+    DisposableEffect(userId) { // A chave é userId: se mudar, o efeito anterior é descartado e um novo é configurado
+        val registration: ListenerRegistration? = if (userId != null) {
+            // Configura o listener somente se userId não for nulo
+            db.collection("accounts")
+                .document(userId)
+                .collection("Categorias")
+                .addSnapshotListener { snapshot, e ->
+                    if (snapshot != null) {
+                        categorias.clear() // Limpa a lista atual
+                        for (document in snapshot.documents) {
+                            val nomeCategoria = document.getString("Nome") ?: ""
+                            val corCategoria = document.getString("Cor") ?: ""
+                            // Adiciona na ordem correta
+                            categorias.add(CategoriaData(nomeCategoria, corCategoria))
+                        }
+                        // A UI que observa 'categorias' será recomposta automaticamente.
+                    }
+                }
+        } else {
+            // Se userId for nulo, não configura listener
+            null
+        }
+        // Este é o bloco onDispose nativo do DisposableEffect
+        // Ele é executado quando o efeito "sai" (quando o Composable é removido ou a chave muda)
+        onDispose {
+            // Remove o listener se ele foi configurado
+            registration?.remove()
+        }
+    }
+
 
     fun deletePassword(idSenha: String) {
         if (userId != null) {
@@ -328,7 +363,10 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean, searchQuery: 
     ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            RowFilter()
+            RowFilter(
+                categorias = categorias,
+                onEditCategorias = { mudarTela(context, CategoryModification::class.java) }
+            )
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -337,11 +375,10 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean, searchQuery: 
             CardItem(
                 apelido = item.apelido,
                 login = "Login: ${item.login}",
-                senha = "Password: ${item.senha}",
+                senha = "Password: ${aesDecryptWithKey(item.senha)}",
                 descricao = "Descrição: ${item.descricao}",
                 categoria = "Categoria: ${item.categoria}",
                 idSenha = item.id,
-                darkMode = darkMode,
                 onDelete = { deletePassword(item.id) }
             )
         }
@@ -351,7 +388,7 @@ fun ScreenContent(paddingValues: PaddingValues, darkMode: Boolean, searchQuery: 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun CardItem(apelido: String, login: String, senha: String, descricao: String,
-             categoria: String, idSenha: String, darkMode: Boolean,onDelete: () -> Unit) {
+             categoria: String, idSenha: String, onDelete: () -> Unit) {
     var showDropdown by remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(AppColors.platinum) }
     var showOptionsMenu by remember { mutableStateOf(false) }
@@ -392,13 +429,9 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
                             .clip(CircleShape)
                             .background(color = selectedColor)
                             .clickable { showDropdown = true }
+                            .border(width = 2.dp, color = MaterialTheme.colorScheme.onSurface, shape = CircleShape)
                     )
-                    ColorPickerDropdown(
-                        darkMode = darkMode,
-                        expanded = showDropdown,
-                        onDismissRequest = { showDropdown = false },
-                        onColorSelected = { selectedColor = it },
-                    )
+
                 }
 
                 Box {
@@ -488,16 +521,11 @@ fun CardItem(apelido: String, login: String, senha: String, descricao: String,
 }
 
 
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     onOpenDrawrer: () -> Unit,
-    darkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit
 ) {
@@ -552,20 +580,10 @@ fun TopBar(
 }
 
 @Composable
-fun RowFilter() {
-    var context = LocalContext.current
-
-    val filtros = remember {
-        mutableStateListOf(
-            "Entretenimento" to Color(0xFFD1A740),
-            "Faculdade" to Color(0xFF38C5D9),
-            "Lazer" to Color(0xFF9C27B0),
-            "Saúde" to Color(0xFF4CAF50),
-            "Trabalho" to Color(0xFFFF9800),
-            "Sem Filtro" to AppColors.platinum
-        )
-    }
-
+fun RowFilter(
+    categorias: List<CategoriaData>, // agora recebe uma lista de categorias
+    onEditCategorias: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -579,22 +597,37 @@ fun RowFilter() {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(end = 8.dp)
         ) {
-            items(filtros, key = { it.first }) { filtro ->
+            items(categorias) { categoria ->
+                val color = try {
+                    val hex = categoria.corCategoria.removePrefix("0x") // Remove o prefixo "0x"
+                    val argb = hex.toULong(16) // Converte para ULong
+
+                    // Extrai os componentes ARGB usando ULong literals (0xFFuL)
+                    val alpha = ((argb shr 24) and 0xFFuL).toFloat() / 255f
+                    val red = ((argb shr 16) and 0xFFuL).toFloat() / 255f
+                    val green = ((argb shr 8) and 0xFFuL).toFloat() / 255f
+                    val blue = (argb and 0xFFuL).toFloat() / 255f
+
+                    // Cria o objeto Color usando os componentes individuais
+                    Color(red, green, blue, alpha)
+
+                } catch (e: Exception) {
+                    // Se houver qualquer erro na conversão (por exemplo, string inválida), usa uma cor padrão
+                    println("Erro ao converter cor hexadecimal '${categoria.corCategoria}' usando componentes ARGB: ${e.message}")
+                    AppColors.platinum // cor padrão
+                }
+
                 Filter(
-                    text = filtro.first,
-                    backgroundColor = filtro.second,
-                    onRemove = {
-                        if (filtro.first != "Sem Filtro") {
-                            filtros.remove(filtro)
-                        }
-                    },
-                    canBeRemoved = filtro.first != "Sem Filtro"
+                    nomeCategoria = categoria.nomeCategoria,
+                    corCategoria = color, // Passa o Color object resultante
+                    onRemove = { /* sua lógica de remoção, se aplicável */ },
+                    canBeRemoved = false // ajuste conforme a necessidade de remover filtros
                 )
             }
         }
 
         IconButton(
-            onClick = { mudarTela(context, CategoryModification::class.java) },
+            onClick = onEditCategorias,
             modifier = Modifier
                 .size(32.dp)
                 .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
@@ -611,20 +644,20 @@ fun RowFilter() {
 
 @Composable
 fun Filter(
-    text: String,
-    backgroundColor: Color,
+    nomeCategoria: String,
+    corCategoria: Color,
     onRemove: () -> Unit,
     canBeRemoved: Boolean
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(backgroundColor)
+            .background(corCategoria) // cor da categoria real
             .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = text, color = Color.Black)
+            Text(text = nomeCategoria, color = Color.Black)
             if (canBeRemoved) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
@@ -640,49 +673,7 @@ fun Filter(
     }
 }
 
-@Composable
-fun ColorPickerDropdown(
-    darkMode: Boolean,
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    onColorSelected: (Color) -> Unit
-) {
-    val filtros = listOf(
-        "Entretenimento" to Color(0xFFD1A740),
-        "Faculdade" to Color(0xFF38C5D9),
-        "Lazer" to Color(0xFF9C27B0),
-        "Saúde" to Color(0xFF4CAF50),
-        "Trabalho" to Color(0xFFFF9800),
-        "Sem Filtro" to AppColors.platinum
-    )
 
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.background(if (darkMode) AppColors.black else AppColors.white) // Cor de fundo do menu
-    ) {
-        filtros.forEach { filtro ->
-            DropdownMenuItem(
-                onClick = {
-                    onColorSelected(filtro.second)
-                    onDismissRequest()
-                },
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .background(filtro.second, shape = CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = filtro.first, color = if (darkMode) AppColors.white else AppColors.black ) // cor do texto do menu
-                    }
-                }
-            )
-            HorizontalDivider()
-        }
-    }
-}
 
 @Composable
 fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
