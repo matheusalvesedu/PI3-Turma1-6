@@ -83,7 +83,7 @@ data class CategoriaData(
 @Preview
 @Composable
 fun TelaPrincipalPreview() {
-    Box(modifier = Modifier.height(800.dp)) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Tela()
     }
 }

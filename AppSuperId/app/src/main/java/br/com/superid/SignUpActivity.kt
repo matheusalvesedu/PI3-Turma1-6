@@ -691,7 +691,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                mudarTela(context, PrincipalScreenActivity::class.java)
+                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
             }
 
             delay(3000)
@@ -717,6 +717,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Icon(
                 painter = painterResource(R.drawable.logo_superid_darkblue),
                 contentDescription = "Logo do Super ID",
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(100.dp)
             )
@@ -727,6 +728,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
         Text(
             text = "Verificação de endereço de e-mail",
             style = MaterialTheme.typography.headlineLarge.copy(
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 fontSize = 24.sp
             ),
@@ -739,6 +741,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Text(
                 text = "Aguardando a verificação do e-mail...",
                 style = MaterialTheme.typography.headlineLarge.copy(
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
                 ),
@@ -760,6 +763,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Text(
                 text = "E-mail verificado!!",
                 style = MaterialTheme.typography.headlineLarge.copy(
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
                 ),
