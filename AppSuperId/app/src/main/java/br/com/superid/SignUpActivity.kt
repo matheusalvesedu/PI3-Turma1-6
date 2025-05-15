@@ -167,6 +167,7 @@ fun sendEmailVerification(user: FirebaseUser?, context: Context){
                 Log.i( "EmailVerification","Email de verificação enviado com sucesso!! ")
             }else{
                 Log.i("EmailVerification", "Email de verificação falhou ao ser enviado -> ${task.exception} ")
+                Toast.makeText(context, "Erro ao enviar o e-mail", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -596,17 +597,28 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             passwordInputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
 
-            if(password.isNotBlank()){
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
-                    RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
-                    RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
-                    RequirementItem("1 número",passwordRequirements.hasDigit)
-                    RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
-                }
+            if(password != passwordConfirm && password.isNotBlank() && passwordConfirm.isNotBlank()){
+                Text(
+                    text = "Parece que as senhas estão diferentes. De uma olhada.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    ),
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
+                RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
+                RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
+                RequirementItem("1 número",passwordRequirements.hasDigit)
+                RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
             }
 
             Spacer(modifier = Modifier.size(16.dp))
@@ -757,6 +769,30 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(50.dp)
             )
+
+            Spacer(modifier = Modifier.size(50.dp))
+
+            Text(
+                text = "Ainda não recebeu o e-mail de verificação?",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+            )
+
+            TextButton(onClick = {
+                sendEmailVerification(auth.currentUser, context)
+                Toast.makeText(context, "E-mail de verificação reenviado com sucesso!", Toast.LENGTH_LONG).show() }
+            ) {
+                Text(
+                    text = "Reenviar e-mail de verificação",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    textDecoration = TextDecoration.Underline
+                )
+            }
 
         }else{
 
