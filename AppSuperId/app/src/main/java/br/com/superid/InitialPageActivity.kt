@@ -81,8 +81,9 @@ fun TelaInicial(modifier: Modifier = Modifier){
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(0.3f)
                 .padding(top = 80.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.TopCenter
         ) {
             Icon(
                 painter = painterResource(R.drawable.logo_superid_darkblue),
@@ -92,18 +93,15 @@ fun TelaInicial(modifier: Modifier = Modifier){
             )
         }
 
-        Spacer(modifier = Modifier.height(100.dp))
-
         Text(text = "O gerenciador\nde senhas\nmais seguro\ndo mercado.",
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Medium
             ),
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(0.5f)
                 .padding(30.dp)
         )
-
-        Spacer(modifier = Modifier.height(180.dp))
 
         Button(
             onClick = {
@@ -112,7 +110,9 @@ fun TelaInicial(modifier: Modifier = Modifier){
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .width(300.dp)
-                .height(60.dp)
+                .height(40.dp)
+                .weight(0.1f)
+                .padding(bottom = 10.dp, top = 10.dp)
         ) {
             Text("Cadastre-se",
                 style = MaterialTheme.typography.titleSmall.copy(
@@ -121,8 +121,6 @@ fun TelaInicial(modifier: Modifier = Modifier){
                 ))
         }
 
-        Spacer (modifier = Modifier.height(10.dp))
-
         OutlinedButton(
             onClick = {
                 mudarTela(context, LoginActivity::class.java)
@@ -130,7 +128,9 @@ fun TelaInicial(modifier: Modifier = Modifier){
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .width(300.dp)
-                .height(60.dp)
+                .height(40.dp)
+                .weight(0.1f)
+                .padding(bottom = 20.dp)
         ) {
             Text("Login",
                 style = MaterialTheme.typography.titleMedium.copy(
