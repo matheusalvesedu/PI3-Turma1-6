@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Space
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -157,50 +158,178 @@ fun alterarCategoria(userId: String,
                      navController: NavController,
                      onSuccess: () -> Unit = {},
                      onFailure: () -> Unit = {}
-){
+) {
     val db = Firebase.firestore
-
-    val atualizacoes = mutableMapOf<String, Any>()
-
-    if (novoNome.isNotBlank()) atualizacoes["Nome"] = novoNome
-    if (novaCor.isNotBlank()) atualizacoes["Cor"] = novaCor
+    val atualizacoesCategoria = mutableMapOf<String, Any>()
+    var nomeAntigo: String? = null
 
     db.collection("accounts")
         .document(userId)
         .collection("Categorias")
         .document(idCategoria)
-        .update(atualizacoes)
-        .addOnSuccessListener {
-            Toast.makeText(context, "Categoria atualizada.", Toast.LENGTH_SHORT).show()
-            navController.popBackStack()
+        .get()
+        .addOnSuccessListener { documento ->
+            if (documento.exists()) {
+                nomeAntigo = documento.getString("Nome")
+
+                if (novoNome.isNotBlank()) atualizacoesCategoria["Nome"] = novoNome
+                if (novaCor.isNotBlank()) atualizacoesCategoria["Cor"] = novaCor
+
+                db.collection("accounts")
+                    .document(userId)
+                    .collection("Categorias")
+                    .document(idCategoria)
+                    .update(atualizacoesCategoria)
+                    .addOnSuccessListener {
+                        if (novoNome.isNotBlank() && nomeAntigo != novoNome) {
+                            db.collection("accounts")
+                                .document(userId)
+                                .collection("Senhas")
+                                .whereEqualTo("categoria", nomeAntigo)
+                                .get()
+                                .addOnSuccessListener { senhas ->
+                                    val batch = db.batch()
+
+                                    for (documentSenha in senhas) {
+                                        val senhaRef = db.collection("accounts")
+                                            .document(userId)
+                                            .collection("Senhas")
+                                            .document(documentSenha.id)
+                                        batch.update(senhaRef, "categoria", novoNome)
+                                    }
+
+                                    batch.commit()
+                                        .addOnSuccessListener {
+                                            Toast.makeText(
+                                                context,
+                                                "Categoria atualizada.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            navController.popBackStack()
+                                            onSuccess()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(
+                                                context,
+                                                "Erro ao atualizar senhas.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            Log.e(
+                                                "AlterarCategoria",
+                                                "Erro ao atualizar senhas: ${e.message}"
+                                            )
+                                            navController.popBackStack()
+                                            onFailure()
+                                        }
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(
+                                        context,
+                                        "Erro ao buscar senhas da categoria.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    Log.e(
+                                        "AlterarCategoria",
+                                        "Erro ao buscar senhas da categoria: ${e.message}"
+                                    )
+                                    navController.popBackStack()
+                                    onFailure()
+                                }
+                        } else {
+                            Toast.makeText(context, "Categoria atualizada.", Toast.LENGTH_SHORT)
+                                .show()
+                            navController.popBackStack()
+                            onSuccess()
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(
+                            context,
+                            "Erro ao atualizar a categoria.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e("AlterarCategoria", "Erro ao atualizar a categoria: ${e.message}")
+                        navController.popBackStack()
+                        onFailure()
+                    }
+            } else {
+                Toast.makeText(context, "Categoria não encontrada.", Toast.LENGTH_SHORT).show()
+                navController.popBackStack()
+                onFailure()
+            }
         }
-        .addOnFailureListener {
-            Toast.makeText(context, "Erro ao atualizar a categoria.", Toast.LENGTH_SHORT).show()
+        .addOnFailureListener { e ->
+            Toast.makeText(context, "Erro ao buscar informações da categoria.", Toast.LENGTH_SHORT)
+                .show()
+            Log.e("AlterarCategoria", "Erro ao buscar informações da categoria: ${e.message}")
             navController.popBackStack()
+            onFailure()
         }
 }
 
 fun excluirCategoria(userId: String,
-                     idCategoria: String,
+                     nomeCategoria: String,
                      context: Context,
                      navController: NavController,
                      onSuccess: () -> Unit = {},
                      onFailure: () -> Unit = {}
 ){
     val db = Firebase.firestore
-    val document = db.collection("accounts")
+
+    db.collection("accounts")
         .document(userId)
         .collection("Categorias")
-        .document(idCategoria)
+        .whereEqualTo("Nome", nomeCategoria)
+        .get()
+        .addOnSuccessListener { categorias ->
+            if (!categorias.isEmpty) {
+                val categoriaDocument = categorias.documents.first()
 
-    document.delete()
-        .addOnSuccessListener {
-            Toast.makeText(context, "Categoria excluída.", Toast.LENGTH_SHORT).show()
-            navController.popBackStack()
-            navController.navigate("categoryList")
+                db.collection("accounts")
+                    .document(userId)
+                    .collection("Senhas")
+                    .whereEqualTo("categoria", nomeCategoria)
+                    .get()
+                    .addOnSuccessListener { senhas ->
+                        val batch = db.batch()
+
+                        for(documentSenha in senhas){
+                            val senhaRef = db.collection("accounts")
+                                .document(userId)
+                                .collection("Senhas")
+                                .document(documentSenha.id)
+                            batch.update(senhaRef, "categoria", "Sem Categoria")
+                        }
+
+                        batch.delete(categoriaDocument.reference)
+
+                        batch.commit()
+                            .addOnSuccessListener {
+                                Toast.makeText(context, "Categoria excluída.", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                                navController.navigate("categoryList")
+                                onSuccess()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(context, "Erro ao excluir categoria.", Toast.LENGTH_SHORT).show()
+                                Log.e("ExcluirCategoria", "Erro ao atualizar senhas ou excluir categoria: ${e.message}")
+                                onFailure()
+                            }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(context, "Erro ao buscar senhas da categoria.", Toast.LENGTH_SHORT).show()
+                        Log.e("ExcluirCategoria", "Erro ao buscar senhas da categoria: ${e.message}")
+                        onFailure()
+                    }
+            } else {
+                Toast.makeText(context, "Categoria não encontrada.", Toast.LENGTH_SHORT).show()
+                onFailure()
+            }
         }
-        .addOnFailureListener {
-            Toast.makeText(context, "Erro ao excluir categoria.", Toast.LENGTH_SHORT).show()
+        .addOnFailureListener { e ->
+            Toast.makeText(context, "Erro ao buscar categoria.", Toast.LENGTH_SHORT).show()
+            Log.e("ExcluirCategoria", "Erro ao buscar categoria: ${e.message}")
+            onFailure()
         }
 }
 
@@ -312,7 +441,7 @@ fun CategoriesListScreen(navController: NavController) {
             }
 
             categorias.forEach{ categoria ->
-                if (categoria.nome != "Sites Web"){
+                if (categoria.nome != "Sites Web" && categoria.nome != "Sem Categoria"){
                     Row(
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -356,7 +485,7 @@ fun CategoriesListScreen(navController: NavController) {
                         text = { Text("Tem certeza de que deseja excluir esta categoria?") },
                         confirmButton = {
                             TextButton(onClick = {
-                                excluirCategoria(uid, categoriaParaExcluir!!.id, context, navController)
+                                excluirCategoria(uid, categoriaParaExcluir!!.nome, context, navController)
                                 categoriaParaExcluir = null
                             }) {
                                 Text("Sim")

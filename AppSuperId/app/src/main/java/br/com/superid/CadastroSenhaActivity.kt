@@ -99,6 +99,11 @@ fun savePasswordToDb(
     val db = Firebase.firestore
     val UID = user.uid
 
+    var newCategory: String = category
+    if (newCategory == ""){
+        newCategory = "Sem Categoria"
+    }
+
     val encryptedPassword = aesEncryptWithKey(password)
     val accessToken = generateAccessToken()
 
@@ -107,7 +112,7 @@ fun savePasswordToDb(
         "login" to login,
         "senha" to encryptedPassword,
         "descrição" to description,
-        "categoria" to category,
+        "categoria" to newCategory,
         "accessToken" to accessToken
     )
 
@@ -295,7 +300,7 @@ fun CadastroSenhaScreen(){
                         )
                     }
                 },
-                enabled = password.isNotBlank() && passwordNickName.isNotBlank() && category.isNotBlank(),
+                enabled = password.isNotBlank() && passwordNickName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (password.isNotBlank() &&
                         passwordNickName.isNotBlank() &&
