@@ -137,6 +137,10 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String, deviceI
         hashMapOf(
             "Nome" to "Teclados de Acesso Físico",
             "Cor" to "0xFF58CC3B"
+        ),
+        hashMapOf(
+            "Nome" to "Sem Categoria",
+            "Cor" to "0xFF8B97AB"
         )
     )
 
@@ -785,7 +789,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 Toast.makeText(context, "E-mail de verificação reenviado com sucesso!", Toast.LENGTH_LONG).show() }
             ) {
                 Text(
-                    text = "Reenviar e-mail de verificação",
+                    text = "Reenviar e-mail dê verificação",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
