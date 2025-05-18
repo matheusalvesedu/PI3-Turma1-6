@@ -102,4 +102,18 @@ dependencies {
     
     // libs do Color Picker
     implementation(libs.colorpicker.compose)
+
+    // Permissions
+    implementation(libs.accompanistPermissions)
+
+    // CameraX dependencies for camera integration
+    implementation(libs.androidx.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.androidx.camera.extensions)
+
+    // ML Kit Barcode Scanning
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.camera.mlkit.vision)
 }
