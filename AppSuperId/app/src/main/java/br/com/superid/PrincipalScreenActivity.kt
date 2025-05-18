@@ -43,6 +43,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.util.UnstableApi
 import com.google.firebase.auth.FirebaseAuth
@@ -61,34 +64,22 @@ class PrincipalScreenActivity : ComponentActivity() {
     }
 }
 
-data class SenhaData(
-    val apelido: String = "",
-    val login: String = "",
-    val senha: String = "",
-    val descricao: String = "",
-    val categoria: String = "",
-    val id: String = ""
-)
-
-data class CategoriaData(
-    val nomeCategoria: String,
-    val corCategoria: String // ou Color se quiser já convertido
-)
-
 @Preview
 @Composable
 fun TelaPrincipalPreview() {
     var searchQuery by remember { mutableStateOf("") }
     Box(modifier = Modifier.fillMaxSize()) {
-        Screen(modifier = Modifier, searchQuery = searchQuery, onSearchQueryChange = { searchQuery = it })
-
+        TelaPrincipal(modifier = Modifier,
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it }
+        )
     }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Screen(
+fun TelaPrincipal(
     modifier: Modifier = Modifier,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit
@@ -97,18 +88,98 @@ fun Screen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         state = rememberTopAppBarState()
     )
-
     var context = LocalContext.current
+
+    var expandedLogout by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .background(MaterialTheme.colorScheme.background),
         topBar = {
-            TopBar(
-                scrollBehavior = scrollBehavior,
-                searchQuery = searchQuery,
-                onSearchQueryChange = onSearchQueryChange
-            )
+            Column {
+                Spacer(modifier = Modifier.fillMaxHeight(0.04f))
+
+                TopAppBar(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(100.dp)),
+                    scrollBehavior = scrollBehavior,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    ),
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = onSearchQueryChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            placeholder = {
+                                Text("Procure por sua Senha", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(50.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                cursorColor = MaterialTheme.colorScheme.onSurface,
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Buscar"
+                                )
+                            }
+                        )
+                    },
+                    navigationIcon = {
+                        Box {
+                            IconButton(
+                                onClick = {expandedLogout = true}
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "Conta",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = expandedLogout,
+                                onDismissRequest = { expandedLogout = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Sair") },
+                                    onClick = {
+                                        expandedLogout = false
+                                        FirebaseAuth.getInstance().signOut()
+                                        Toast.makeText(context, "Sessão encerrada.", Toast.LENGTH_SHORT).show()
+                                        val intent = Intent(context, LoginActivity::class.java)
+                                        intent.flags =
+                                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                        context.startActivity(intent)
+                                    }
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = null,
+                            modifier = Modifier.size(42.dp)
+                        )
+                    }
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
@@ -145,8 +216,6 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
 
     var dataLoadedSuccessfully by remember { mutableStateOf(false) }
 
-
-    // Carregar os dados do Firestore
     LaunchedEffect(userId) {
         if (userId != null) {
             isLoading = true
@@ -179,7 +248,6 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
         }
     }
 
-    // Carregar os dados das categorias
     DisposableEffect(userId) {
         val registration: ListenerRegistration? = if (userId != null) {
             db.collection("accounts")
@@ -202,6 +270,7 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
             registration?.remove()
         }
     }
+
     fun deletePassword(idSenha: String) {
         if (userId != null) {
             db.collection("accounts")
@@ -268,7 +337,7 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
                         CardItem(
                             apelido = item.apelido,
                             login = "Login: ${item.login}",
-                            senha = "Password: ${aesDecryptWithKey(item.senha)}",
+                            senha = aesDecryptWithKey(item.senha),
                             descricao = "Descrição: ${item.descricao}",
                             categoria = "Categoria: ${item.categoria}",
                             idSenha = item.id,
@@ -299,31 +368,13 @@ fun CardItem(apelido: String,
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val nomeCategoriaLimpo = categoria.removePrefix("Categoria: ").trim()
-
     val categoriaCerta = categorias.find {
         it.nomeCategoria.trim().equals(nomeCategoriaLimpo, ignoreCase = true)
     }
 
-    val corFilro = try {
-        val hex = categoriaCerta?.corCategoria?.removePrefix("0x")
-            ?: throw IllegalArgumentException("Cor inválida ou categoria não encontrada")
+    var senhaVisivel by remember { mutableStateOf(false) }
 
-        val argb = hex.toULong(16)
-        val alpha = ((argb shr 24) and 0xFFuL).toFloat() / 255f
-        val red = ((argb shr 16) and 0xFFuL).toFloat() / 255f
-        val green = ((argb shr 8) and 0xFFuL).toFloat() / 255f
-        val blue = (argb and 0xFFuL).toFloat() / 255f
-
-        Color(red, green, blue, alpha)
-    } catch (e: Exception) {
-        println("Erro ao converter cor: ${e.message}")
-        AppColors.platinum
-    }
-    println("Categoria armazenada: $categorias")
-    println("Categoria recebida: $categoria")
-    println("Categoria encontrada: ${categoriaCerta?.nomeCategoria}")
-    println("Cor recebida: ${categoriaCerta?.corCategoria}")
-
+    val corFilro = hexToColor(categoriaCerta?.corCategoria)
 
     Box(
         modifier = Modifier
@@ -358,7 +409,11 @@ fun CardItem(apelido: String,
                             .size(24.dp)
                             .clip(CircleShape)
                             .background(color = corFilro)
-                            .border(width = 2.dp, color = MaterialTheme.colorScheme.onSurface, shape = CircleShape)
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                shape = CircleShape
+                            )
                     )
 
                 }
@@ -398,17 +453,27 @@ fun CardItem(apelido: String,
             }
 
             if (showDeleteDialog) {
-                ConfirmDeleteDialog(
-                    onConfirm = {
-                        onDelete()
-                        showDeleteDialog = false
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Confirmar exclusão") },
+                    text = { Text("Tem certeza de que deseja excluir este item?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            onDelete()
+                            showDeleteDialog = false
+                        }) {
+                            Text("Sim")
+                        }
                     },
-                    onDismiss = {
-                        showDeleteDialog = false
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showDeleteDialog = false
+                        }) {
+                            Text("Cancelar")
+                        }
                     }
                 )
             }
-
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -421,12 +486,26 @@ fun CardItem(apelido: String,
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = senha,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 16.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+            ) {
+                Text(
+                    text = "Password: " + if (senhaVisivel) senha else "•".repeat(senha.length),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(
+                    onClick = { senhaVisivel = !senhaVisivel }
+                ) {
+                    Icon(
+                        imageVector = if (senhaVisivel) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (senhaVisivel) "Ocultar senha" else "Mostrar senha"
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -449,75 +528,10 @@ fun CardItem(apelido: String,
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBar(
-    scrollBehavior: TopAppBarScrollBehavior,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit
-) {
-    Column {
-        Spacer(modifier = Modifier.fillMaxHeight(0.04f))
-
-        TopAppBar(
-            modifier = Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(100.dp)),
-            scrollBehavior = scrollBehavior,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background
-            ),
-            windowInsets = WindowInsets(0.dp),
-            title = {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = onSearchQueryChange,
-                    modifier = Modifier.fillMaxWidth().height(55.dp),
-                    placeholder = {
-                        Text("Procure por sua Senha", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(50.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        cursorColor = MaterialTheme.colorScheme.onSurface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Buscar"
-                        )
-                    }
-                )
-            },
-            navigationIcon = {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(40.dp)
-                )
-            },
-            actions = {
-                Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    contentDescription = null,
-                    modifier = Modifier.size(42.dp)
-                )
-            }
-        )
-    }
-}
-
 @Composable
 fun RowFilter(
-    categorias: List<CategoriaData>, // agora recebe uma lista de categorias
-    selectedCategory: String?, // Recebe a categoria selecionada
+    categorias: List<CategoriaData>,
+    selectedCategory: String?,
     onCategorySelected: (String?) -> Unit,
     onEditCategorias: () -> Unit = {}
 ) {
@@ -535,39 +549,24 @@ fun RowFilter(
             contentPadding = PaddingValues(end = 8.dp)
         ) {
             items(categorias) { categoria ->
-                val color = try {
-                    val hex = categoria.corCategoria.removePrefix("0x") // Remove o prefixo "0x"
-                    val argb = hex.toULong(16) // Converte para ULong
+                if(categoria.nomeCategoria != "Sem Categoria"){
+                    val color = hexToColor(categoria.corCategoria)
 
-                    // Extrai os componentes ARGB usando ULong literals (0xFFuL)
-                    val alpha = ((argb shr 24) and 0xFFuL).toFloat() / 255f
-                    val red = ((argb shr 16) and 0xFFuL).toFloat() / 255f
-                    val green = ((argb shr 8) and 0xFFuL).toFloat() / 255f
-                    val blue = (argb and 0xFFuL).toFloat() / 255f
-
-                    // Cria o objeto Color usando os componentes individuais
-                    Color(red, green, blue, alpha)
-
-                } catch (e: Exception) {
-                    // Se houver qualquer erro na conversão (por exemplo, string inválida), usa uma cor padrão
-                    println("Erro ao converter cor hexadecimal '${categoria.corCategoria}' usando componentes ARGB: ${e.message}")
-                    AppColors.platinum // cor padrão
+                    Filter(
+                        nomeCategoria = categoria.nomeCategoria,
+                        corCategoria = color,
+                        isSelected = categoria.nomeCategoria == selectedCategory,
+                        onClick = {
+                            onCategorySelected(if (selectedCategory == categoria.nomeCategoria) null else categoria.nomeCategoria)
+                        },
+                        onRemove = {},
+                        canBeRemoved = false
+                    )
                 }
-
-                Filter(
-                    nomeCategoria = categoria.nomeCategoria,
-                    corCategoria = color,
-                    isSelected = categoria.nomeCategoria == selectedCategory, // Indica se está selecionado
-                    onClick = {
-                        // Chamar o callback quando o filtro for clicado
-                        // Se a categoria clicada já estiver selecionada, deseleciona (mostra todas)
-                        onCategorySelected(if (selectedCategory == categoria.nomeCategoria) null else categoria.nomeCategoria)
-                    },
-                    onRemove = { /* sua lógica de remoção, se aplicável */ },
-                    canBeRemoved = false // ajuste conforme a necessidade de remover filtros
-                )
             }
         }
+
+        Spacer(modifier = Modifier.width(5.dp))
 
         IconButton(
             onClick = onEditCategorias,
@@ -589,8 +588,8 @@ fun RowFilter(
 fun Filter(
     nomeCategoria: String,
     corCategoria: Color,
-    isSelected: Boolean, // Novo parâmetro para indicar se está selecionado
-    onClick: () -> Unit, // Novo parâmetro para o clique
+    isSelected: Boolean,
+    onClick: () -> Unit,
     onRemove: () -> Unit,
     canBeRemoved: Boolean
 ) {
@@ -621,61 +620,6 @@ fun Filter(
                         .size(16.dp)
                         .clickable { onRemove() }
                 )
-            }
-        }
-    }
-}
-
-
-
-@Composable
-fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.white)
-                .padding(16.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Tem certeza que deseja excluir esta senha?",
-                    fontSize = 18.sp,
-                    color = AppColors.gunmetal,
-                    modifier = Modifier.padding(bottom = 20.dp)
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            onConfirm()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.satinSheenGold,
-                            contentColor = AppColors.black
-                        )
-                    ) {
-                        Text("Sim")
-                    }
-
-                    Button(
-                        onClick = {
-                            onDismiss()
-                        },
-
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.gunmetal,
-                            contentColor = AppColors.white
-                        )
-                    ) {
-                        Text("Não")
-                    }
-                }
             }
         }
     }
