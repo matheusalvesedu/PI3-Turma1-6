@@ -1,5 +1,6 @@
 package br.com.superid
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -379,7 +380,6 @@ fun CardItem(apelido: String,
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
-            .height(220.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)

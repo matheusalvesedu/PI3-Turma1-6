@@ -604,13 +604,12 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
             if(password != passwordConfirm && password.isNotBlank() && passwordConfirm.isNotBlank()){
                 Text(
                     text = "Parece que as senhas estão diferentes. De uma olhada.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color.Red,
                         fontSize = 12.sp
                     ),
                     modifier = Modifier
-                        .padding(10.dp)
+                        .padding(16.dp)
                 )
             }
 

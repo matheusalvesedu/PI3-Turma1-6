@@ -358,7 +358,7 @@ fun CategoriesListScreen(navController: NavController) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { activityBackButton(activity) }
+        topBar = { activityBackButtonPS() }
     ) { innerPadding ->
         Column(
             modifier = Modifier
