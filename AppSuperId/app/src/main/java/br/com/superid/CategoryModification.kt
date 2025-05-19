@@ -425,7 +425,20 @@ fun CategoriesListScreen(navController: NavController) {
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(0.8f)
+                        .weight(0.7f)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(35.dp)
+                        .clip(CircleShape)
+                        .background(color = Color(0xFFCCA43B))
+                        .border(
+                            width = 2.dp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            shape = CircleShape
+                        )
+                        .weight(0.1f)
                 )
 
                 IconButton(
@@ -462,7 +475,20 @@ fun CategoriesListScreen(navController: NavController) {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(0.8f)
+                                .weight(0.7f)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .clip(CircleShape)
+                                .background(color = hexToColor(categoria.cor))
+                                .border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    shape = CircleShape
+                                )
+                                .weight(0.1f)
                         )
 
                         IconButton(

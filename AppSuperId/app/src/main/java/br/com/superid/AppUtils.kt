@@ -228,7 +228,8 @@ fun hexToColor(hexString: String?): Color {
 // Objeto para armazenar ID e nome de uma categoria
 data class Categoria(
     val id: String,
-    val nome: String
+    val nome: String,
+    val cor: String
 )
 
 // Objeto para armazenar todas as informações das senhas cadastradas
@@ -259,9 +260,10 @@ fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) 
             val categorias = result.documents
                 .mapNotNull { doc ->
                     val nome = doc.getString("Nome")
+                    val cor = doc.getString("Cor")
                     val id = doc.id
-                    if (nome != null) {
-                        Categoria(id = id, nome = nome)
+                    if (nome != null && cor != null) {
+                        Categoria(id = id, nome = nome, cor = cor)
                     } else null
                 }
             onResult(categorias)
