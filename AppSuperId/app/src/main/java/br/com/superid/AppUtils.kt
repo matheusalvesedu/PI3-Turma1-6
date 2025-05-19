@@ -207,30 +207,6 @@ fun activityBackButton(activity: Activity?){
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("ContextCastToActivity")
-@Composable
-fun activityBackButtonPS(){
-    var context = LocalContext.current
-    TopAppBar(
-        modifier = Modifier.height(80.dp),
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            titleContentColor = MaterialTheme.colorScheme.onBackground,
-            navigationIconContentColor = MaterialTheme.colorScheme.primary
-        ),
-        title = {},
-        navigationIcon = {
-            IconButton(onClick = {mudarTelaFinish(context, PrincipalScreenActivity::class.java)}) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Voltar"
-                )
-            }
-        },
-    )
-}
-
 // Botão para voltar telas dentro de uma única activity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
