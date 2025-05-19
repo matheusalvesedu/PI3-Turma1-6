@@ -306,11 +306,14 @@ fun CadastroSenhaScreen() {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (
                         password.isNotBlank() &&
-                        passwordNickName.isNotBlank() &&
-                        category.isNotBlank()
+                        passwordNickName.isNotBlank()
                     ) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (
+                        password.isNotBlank() &&
+                        passwordNickName.isNotBlank()
+                    ) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 ),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -330,8 +333,7 @@ fun CadastroSenhaScreen() {
                         style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         color = if (
                             password.isNotBlank() &&
-                            passwordNickName.isNotBlank() &&
-                            category.isNotBlank()
+                            passwordNickName.isNotBlank()
                         ) MaterialTheme.colorScheme.onPrimary
                         else MaterialTheme.colorScheme.onSurface
                     )
