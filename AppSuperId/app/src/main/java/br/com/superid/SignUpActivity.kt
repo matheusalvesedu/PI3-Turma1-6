@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.devicelock.DeviceId
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
@@ -110,7 +112,8 @@ fun checkPasswordRequirements(password: String): PasswordRequirements{
     )
 }
 
-fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
+@SuppressLint("HardwareIds")
+fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String, deviceId: String){
 
     val db = Firebase.firestore
     val UID = user!!.uid
@@ -118,7 +121,8 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
     val userAccount = hashMapOf(
         "name" to name,
         "email" to email,
-        "firstAccess" to true
+        "firstAccess" to true,
+        "deviceId" to deviceId
     )
 
     val defaultCategories = listOf(
@@ -133,6 +137,10 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
         hashMapOf(
             "Nome" to "Teclados de Acesso Físico",
             "Cor" to "0xFF58CC3B"
+        ),
+        hashMapOf(
+            "Nome" to "Sem Categoria",
+            "Cor" to "0xFF8B97AB"
         )
     )
 
@@ -141,8 +149,6 @@ fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String){
         .addOnSuccessListener{
 
             for (categoria in defaultCategories) {
-
-                val categoryName = categoria["Nome"] ?: "Categoria sem nome"
 
                 db.collection("accounts").document(UID).collection("Categorias")
                     .add(categoria)
@@ -165,6 +171,7 @@ fun sendEmailVerification(user: FirebaseUser?, context: Context){
                 Log.i( "EmailVerification","Email de verificação enviado com sucesso!! ")
             }else{
                 Log.i("EmailVerification", "Email de verificação falhou ao ser enviado -> ${task.exception} ")
+                Toast.makeText(context, "Erro ao enviar o e-mail", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -175,6 +182,7 @@ fun createUser(
     email: String,
     password: String,
     context: Context,
+    deviceId: String,
     onSuccess: () -> Unit,
     onFailure: () -> Unit
 ) {
@@ -187,7 +195,7 @@ fun createUser(
 
                 val user = auth.currentUser
 
-                saveNewAccountToDB(user,name,email)
+                saveNewAccountToDB(user,name,email,deviceId)
                 sendEmailVerification(user,context)
                 onSuccess()
 
@@ -514,6 +522,7 @@ fun EmailScreen(navController: NavController, name: String) {
     }
 }
 
+@SuppressLint("HardwareIds")
 @Composable
 fun PasswordScreen(navController: NavController, name: String, email: String) {
 
@@ -521,7 +530,9 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     var passwordConfirm by remember { mutableStateOf("") }
     val passwordRequirements = checkPasswordRequirements(password)
     var termosAceitos by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+    val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
     var isLoading by remember { mutableStateOf(false) }
 
@@ -590,17 +601,28 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             passwordInputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
 
-            if(password.isNotBlank()){
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
-                    RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
-                    RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
-                    RequirementItem("1 número",passwordRequirements.hasDigit)
-                    RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
-                }
+            if(password != passwordConfirm && password.isNotBlank() && passwordConfirm.isNotBlank()){
+                Text(
+                    text = "Parece que as senhas estão diferentes. De uma olhada.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    ),
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
+                RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
+                RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
+                RequirementItem("1 número",passwordRequirements.hasDigit)
+                RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
             }
 
             Spacer(modifier = Modifier.size(16.dp))
@@ -620,6 +642,7 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         email,
                         password,
                         context,
+                        deviceId,
                         onSuccess = {shouldNavigate = true},
                         onFailure = {
                             isLoading = false
@@ -684,7 +707,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                mudarTela(context, PrincipalScreenActivity::class.java)
+                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
             }
 
             delay(3000)
@@ -710,6 +733,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Icon(
                 painter = painterResource(R.drawable.logo_superid_darkblue),
                 contentDescription = "Logo do Super ID",
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(100.dp)
             )
@@ -720,6 +744,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
         Text(
             text = "Verificação de endereço de e-mail",
             style = MaterialTheme.typography.headlineLarge.copy(
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 fontSize = 24.sp
             ),
@@ -732,6 +757,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             Text(
                 text = "Aguardando a verificação do e-mail...",
                 style = MaterialTheme.typography.headlineLarge.copy(
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
                 ),
@@ -748,11 +774,36 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 modifier = Modifier.size(50.dp)
             )
 
+            Spacer(modifier = Modifier.size(50.dp))
+
+            Text(
+                text = "Ainda não recebeu o e-mail de verificação?",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+            )
+
+            TextButton(onClick = {
+                sendEmailVerification(auth.currentUser, context)
+                Toast.makeText(context, "E-mail de verificação reenviado com sucesso!", Toast.LENGTH_LONG).show() }
+            ) {
+                Text(
+                    text = "Reenviar e-mail dê verificação",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    textDecoration = TextDecoration.Underline
+                )
+            }
+
         }else{
 
             Text(
                 text = "E-mail verificado!!",
                 style = MaterialTheme.typography.headlineLarge.copy(
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
                 ),

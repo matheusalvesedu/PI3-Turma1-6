@@ -53,6 +53,14 @@ fun mudarTela(context: Context, destination: Class<*>){
     context.startActivity(intent)
 }
 
+fun mudarTelaFinish(context: Context, destination: Class<*>){
+    val intent = Intent(context, destination)
+    context.startActivity(intent)
+    if (context is Activity) {
+        context.finish()
+    }
+}
+
 // Função para criar caixas com input
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,10 +209,42 @@ fun aesDecryptWithKey(encryptedData: String): String{
     return String(dataDecrypted)
 }
 
-// Objeto para armazenar as informações das categorias
+// Função para transformar uma string de cor em uma Color
+fun hexToColor(hexString: String?): Color {
+    return try {
+        hexString?.removePrefix("0x")?.toULong(16)?.let { argb ->
+            val alpha = ((argb shr 24) and 0xFFuL).toFloat() / 255f
+            val red = ((argb shr 16) and 0xFFuL).toFloat() / 255f
+            val green = ((argb shr 8) and 0xFFuL).toFloat() / 255f
+            val blue = (argb and 0xFFuL).toFloat() / 255f
+            Color(red, green, blue, alpha)
+        } ?: AppColors.platinum
+    } catch (e: Exception) {
+        println("Erro ao converter cor hexadecimal '$hexString': ${e.message}")
+        AppColors.platinum
+    }
+}
+
+// Objeto para armazenar ID e nome de uma categoria
 data class Categoria(
     val id: String,
     val nome: String
+)
+
+// Objeto para armazenar todas as informações das senhas cadastradas
+data class SenhaData(
+    val apelido: String = "",
+    val login: String = "",
+    val senha: String = "",
+    val descricao: String = "",
+    val categoria: String = "",
+    val id: String = ""
+)
+
+// Objeto para armezanar apenas nome e cor de uma categoria
+data class CategoriaData(
+    val nomeCategoria: String,
+    val corCategoria: String
 )
 
 // Função para pegar as categorias do banco de dados e adicionar ao objeto Categoria
