@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<div class="text-center"></div>
 <html lang="pt-BR">
 
 <head>
@@ -143,6 +143,21 @@
 
         getQRCode();
         startCountdown();
+        async function checkLoginStatus() {
+            const res = await fetch(`https://seuservidor.com/checkLoginStatus?token=${loginToken}`);
+            const data = await res.json();
+
+            if (data.validated) {
+                // Login validado, redireciona pra página de login ou principal
+                window.location.href = "Login.html?token=" + loginToken;
+            } else {
+                // Se não validado, tenta de novo em 3 segundos
+                setTimeout(checkLoginStatus, 3000);
+            }
+        }
+
+        // Começa a checar após gerar o QR Code
+        checkLoginStatus();
     </script>
 
 </body>

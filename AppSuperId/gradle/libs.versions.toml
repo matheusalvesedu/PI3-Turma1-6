@@ -22,6 +22,7 @@ cameraMlkitVision = "1.4.1"
 camerax = "1.4.1"
 mlkit-barcode-scanning = "17.3.0"
 accompanistPermissions = "0.34.0"
+adsMobileSdk = "0.15.1-alpha01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -58,6 +59,7 @@ androidx-camera-core = { group = "androidx.camera", name = "camera-core", versio
 mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit-barcode-scanning" }
 accompanistPermissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-camera-extensions = { group = "androidx.camera", name = "camera-extensions", version = "camerax" }
+ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
 
 
 [plugins]

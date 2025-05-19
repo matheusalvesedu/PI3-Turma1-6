@@ -2,55 +2,38 @@ package br.com.superid
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.superid.permissions.WithPermissionInActivity
 import br.com.superid.ui.theme.ui.theme.SuperIDTheme
-import java.io.File
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
 
 class QRCodeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +46,25 @@ class QRCodeActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         permission = Manifest.permission.CAMERA,
                         activity = this
-
                     ) {
-                        CameraAppScreen()
+                        val context = LocalContext.current
+                        QrScannerScreen(
+                            onQrCodeScanned = { qrCode ->
+                                try {
+                                    val uri = qrCode.toUri()
+                                    val loginToken = uri.getQueryParameter("token") ?: uri.toString()
+                                    if (loginToken.isNotBlank()) {
+                                        handleLoginToken(context = context, loginToken = loginToken)
+                                    } else {
+                                        Toast.makeText(context, "QR Code inválido", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    Toast.makeText(context, "Erro ao processar QR Code", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onClose = { finish() }
+                        )
                     }
                 }
             }
@@ -74,162 +73,129 @@ class QRCodeActivity : ComponentActivity() {
 }
 
 @Composable
-fun CameraAppScreen() {
-    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_FRONT) }
-    var zoomLevel by remember { mutableFloatStateOf(0.0f) }
-    val imageCaptureUseCase = remember { ImageCapture.Builder().build() }
-
-    val localContext = LocalContext.current
-
-    Box {
-
-        Icon(
-            painter = painterResource(R.drawable.logo_superid_darkblue),
-            contentDescription = "Logo do Super ID",
-            modifier = Modifier.size(100.dp)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        CameraPreview(
-            lensFacing = lensFacing,
-            zoomLevel = zoomLevel,
-            imageCaptureUseCase = imageCaptureUseCase
-        )
-
-        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Row {
-                Button(onClick = { lensFacing = CameraSelector.LENS_FACING_FRONT }) {
-                    Text("Front camera")
-                }
-                Button(onClick = { lensFacing = CameraSelector.LENS_FACING_BACK }) {
-                    Text("Back camera")
-                }
-            }
-
-            Row {
-                Button(onClick = { zoomLevel = 0.0f }) {
-                    Text("Zoom 0.0")
-                }
-                Button(onClick = { zoomLevel = 0.5f }) {
-                    Text("Zoom 0.5")
-                }
-                Button(onClick = { zoomLevel = 1.0f }) {
-                    Text("Zoom 1.0")
-                }
-            }
-
-            Button(onClick = {
-                val outputFileOptions = ImageCapture.OutputFileOptions.Builder(File(localContext.externalCacheDir, "image.jpg"))
-                    .build()
-                val callback = object: ImageCapture.OnImageSavedCallback {
-                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        outputFileResults.savedUri?.shareAsImage(localContext)
-                    }
-
-                    override fun onError(exception: ImageCaptureException) {
-                    }
-                }
-                imageCaptureUseCase.takePicture(outputFileOptions, ContextCompat.getMainExecutor(localContext), callback)
-            }) {
-                Text("Take Photo")
-            }
-        }
-    }
-}
-
-@Composable
-fun CameraPreview(
-    modifier: Modifier = Modifier,
-    lensFacing: Int,
-    zoomLevel: Float,
-    imageCaptureUseCase: ImageCapture
+fun QrScannerScreen(
+    onQrCodeScanned: (String) -> Unit,
+    onClose: () -> Unit
 ) {
-    val previewUseCase = remember { androidx.camera.core.Preview.Builder().build() }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val previewView = remember { PreviewView(context) }
 
-    var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
-    var cameraControl by remember { mutableStateOf<CameraControl?>(null) }
-
-    val localContext = LocalContext.current
-
-    fun rebindCameraProvider() {
-        cameraProvider?.let { cameraProvider ->
-            val cameraSelector = CameraSelector.Builder()
-                .requireLensFacing(lensFacing)
-                .build()
-            cameraProvider.unbindAll()
-            val camera = cameraProvider.bindToLifecycle(
-                localContext as LifecycleOwner,
-                cameraSelector,
-                previewUseCase, imageCaptureUseCase
-            )
-            cameraControl = camera.cameraControl
-        }
+    LaunchedEffect(true) {
+        startCameraWithAnalyzer(
+            context = context,
+            previewView = previewView,
+            lifecycleOwner = lifecycleOwner,
+            onQrCodeScanned = onQrCodeScanned
+        )
     }
 
-    LaunchedEffect(Unit) {
-        cameraProvider = ProcessCameraProvider.awaitInstance(localContext)
-        rebindCameraProvider()
-    }
-
-    LaunchedEffect(lensFacing) {
-        rebindCameraProvider()
-    }
-
-    LaunchedEffect(zoomLevel) {
-        cameraControl?.setLinearZoom(zoomLevel)
-    }
-
-    AndroidView(
-        modifier = modifier.fillMaxSize(),
-        factory = { context ->
-            PreviewView(context).also {
-                previewUseCase.surfaceProvider = it.surfaceProvider
-                rebindCameraProvider()
-            }
-        }
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CameraScreenPreview() {
-    SuperIDTheme {
-        CameraAppScreen()
-    }
-}
-
-@Preview(showBackground = true, name = "Tela de Permissão em Activity")
-@Composable
-fun PermissionScreenInActivityPreview() {
-    // Criamos uma Activity mock para o preview
-    class MockActivity : ComponentActivity()
-    val mockActivity = remember { MockActivity() }
-
-    SuperIDTheme {
-        WithPermissionInActivity(
-            permission = android.Manifest.permission.CAMERA,
-            activity = mockActivity
+    Column(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { previewView },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Conteúdo que será mostrado após a permissão
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.LightGray),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Câmera ativada!")
+            Text("Aponte para o QR Code", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onClose) {
+                Text("Fechar Scanner")
             }
         }
     }
 }
 
-fun Uri.shareAsImage(context: Context) {
-    val contentUri = FileProvider.getUriForFile(context, "com.tdcolvin.cameraxworkshop.fileprovider", toFile())
-    val shareIntent: Intent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_STREAM, contentUri)
-        type = "image/jpeg"
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
+fun startCameraWithAnalyzer(
+    context: Context,
+    previewView: PreviewView,
+    lifecycleOwner: LifecycleOwner,
+    onQrCodeScanned: (String) -> Unit
+) {
+    val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+    cameraProviderFuture.addListener({
+        val cameraProvider = cameraProviderFuture.get()
+
+        val preview = Preview.Builder().build().also {
+            it.surfaceProvider = previewView.surfaceProvider
+        }
+
+        val barcodeScanner = BarcodeScanning.getClient()
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+
+        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy: ImageProxy ->
+            val mediaImage = imageProxy.image
+            if (mediaImage != null) {
+                val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                barcodeScanner.process(inputImage)
+                    .addOnSuccessListener { barcodes ->
+                        barcodes.firstOrNull()?.rawValue?.let { qrCode ->
+                            Log.i("QRCODE", qrCode)
+                            onQrCodeScanned(qrCode)
+                        }
+                    }
+                    .addOnCompleteListener {
+                        imageProxy.close()
+                    }
+            } else {
+                imageProxy.close()
+            }
+        }
+
+        try {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                CameraSelector.DEFAULT_BACK_CAMERA,
+                preview,
+                imageAnalysis
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }, ContextCompat.getMainExecutor(context))
+}
+
+private fun handleLoginToken(context: Context, loginToken: String) {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    if (currentUser == null) {
+        Toast.makeText(context, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
+        return
     }
-    context.startActivity(Intent.createChooser(shareIntent, null))
+
+    val uid = currentUser.uid
+    val firestore = FirebaseFirestore.getInstance()
+    val loginDocRef = firestore.collection("login").document(loginToken)
+
+    loginDocRef.get()
+        .addOnSuccessListener { document ->
+            if (document.exists()) {
+                val updates = mapOf(
+                    "user" to uid,
+                    "loginAt" to FieldValue.serverTimestamp()
+                )
+                loginDocRef.update(updates)
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Login confirmado!", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Erro ao confirmar login", Toast.LENGTH_SHORT).show()
+                    }
+            } else {
+                Toast.makeText(context, "Token não encontrado ou expirado", Toast.LENGTH_SHORT).show()
+            }
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Erro ao buscar token", Toast.LENGTH_SHORT).show()
+        }
 }
