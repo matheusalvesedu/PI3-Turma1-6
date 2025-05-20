@@ -704,7 +704,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
+                mudarTelaFinish(context, TourActivity::class.java)
             }
 
             delay(3000)
