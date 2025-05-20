@@ -194,9 +194,9 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                             }
                     }
                 },
-                enabled = nPassword.isNotBlank(),
+                enabled = nPassword.isNotBlank() && apelidocategoria.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (nPassword.isNotBlank())
+                    containerColor = if (nPassword.isNotBlank() && apelidocategoria.isNotBlank())
                         MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -217,14 +217,11 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                     Text(
                         text = "Salvar",
                         fontSize = 20.sp,
-                        style = MaterialTheme.typography.titleLarge
-                    ,
-                    color = if (
-                        nPassword.isNotBlank() &&
-                        description.isNotBlank() &&
-                        category.isNotBlank()
-                    ) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.titleLarge,
+                        color = if (
+                            nPassword.isNotBlank() && apelidocategoria.isNotBlank()
+                        ) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
