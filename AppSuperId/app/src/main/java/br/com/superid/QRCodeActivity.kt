@@ -1,27 +1,32 @@
 package br.com.superid
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -80,34 +85,97 @@ fun QrScannerScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
+    val activity = LocalActivity.current
+
+    // Controle para evitar múltiplos escaneamentos
+    var hasScanned by remember { mutableStateOf(false) }
 
     LaunchedEffect(true) {
         startCameraWithAnalyzer(
             context = context,
             previewView = previewView,
             lifecycleOwner = lifecycleOwner,
-            onQrCodeScanned = onQrCodeScanned
+            onQrCodeScanned = { qrCode ->
+                if (!hasScanned) {
+                    hasScanned = true
+                    onQrCodeScanned(qrCode)
+                }
+            }
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { previewView },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        )
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { activityBackButton(activity) }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(16.dp),
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Aponte para o QR Code", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onClose) {
-                Text("Fechar Scanner")
+            // Logo
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.logo_superid_darkblue),
+                    contentDescription = "Logo do Super ID",
+                    modifier = Modifier.size(100.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Título
+            Text(
+                text = "Escaneie o QR Code",
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Visualização da câmera
+            Box(
+                modifier = Modifier
+                    .size(300.dp)
+                    .background(Color.Black, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                AndroidView(
+                    factory = { previewView },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Aponte para o QR Code",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onClose,
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                ) {
+                    Text("Cancelar")
+                }
             }
         }
     }
@@ -133,7 +201,7 @@ fun startCameraWithAnalyzer(
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
 
-        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy: ImageProxy ->
+        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
             val mediaImage = imageProxy.image
             if (mediaImage != null) {
                 val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
@@ -187,6 +255,7 @@ private fun handleLoginToken(context: Context, loginToken: String) {
                 loginDocRef.update(updates)
                     .addOnSuccessListener {
                         Toast.makeText(context, "Login confirmado!", Toast.LENGTH_SHORT).show()
+                        (context as? Activity)?.finish() // Fecha a activity
                     }
                     .addOnFailureListener {
                         Toast.makeText(context, "Erro ao confirmar login", Toast.LENGTH_SHORT).show()
