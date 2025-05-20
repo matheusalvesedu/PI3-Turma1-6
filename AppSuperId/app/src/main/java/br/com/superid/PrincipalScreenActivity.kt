@@ -1,5 +1,6 @@
 package br.com.superid
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -47,6 +48,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -161,6 +163,8 @@ fun TelaPrincipal(
                                         expandedLogout = false
                                         FirebaseAuth.getInstance().signOut()
                                         Toast.makeText(context, "Sessão encerrada.", Toast.LENGTH_SHORT).show()
+                                        val userSharedPreferences = context.getSharedPreferences("user_prefs",Context.MODE_PRIVATE)
+                                        userSharedPreferences.edit() { putBoolean("is_logged", false) }
                                         val intent = Intent(context, LoginActivity::class.java)
                                         intent.flags =
                                             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
