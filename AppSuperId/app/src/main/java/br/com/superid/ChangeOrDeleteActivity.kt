@@ -80,12 +80,13 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                 if (document != null && document.exists()) {
                     apelidocategoria = document.getString("Apelido da senha") ?: ""
                     login = document.getString("login") ?: ""
-                    senha = document.getString("senha") ?: ""
+                    senha = aesDecryptWithKey(document.getString("senha") ?: "")
                     descricao = document.getString("descrição") ?: ""
                     categoria = document.getString("categoria") ?: ""
 
                     description = descricao
                     category = categoria
+                    nPassword = senha
                 }
             }
         }
@@ -153,11 +154,9 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
 
             Spacer(modifier = Modifier.size(16.dp))
 
-            inputBox(
-                description,
+            inputBoxMaxLength(description,
                 { newDescription -> description = newDescription },
-                "Digite sua descrição (opcional)"
-            )
+                "Digite uma descrição (opcional)", 150)
 
             Spacer(modifier = Modifier.size(16.dp))
 
@@ -191,7 +190,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                                 Toast
                                     .makeText(context, "Senha atualizada!", Toast.LENGTH_SHORT)
                                     .show()
-                                mudarTela(context, PrincipalScreenActivity::class.java)
+                                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
                             }
                     }
                 },

@@ -206,7 +206,6 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                         onSuccess = {
                             isLoading = false
                             mudarTela(context, InitialPageActivity::class.java)
-                            Toast.makeText(context, "Login bem-sucedido!", Toast.LENGTH_SHORT).show()
                         },
                         onFailure = { exception ->
                             isLoading = false
