@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -418,6 +420,15 @@ fun CategoriesListScreen(navController: NavController) {
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ){
+                Divider(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .weight(0.01f),
+                    color = Color(0xFFCCA43B)
+                )
+
+                Spacer(Modifier.weight(0.02f))
+
                 Text(
                     text = "Sites Web",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -425,20 +436,7 @@ fun CategoriesListScreen(navController: NavController) {
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(0.7f)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(35.dp)
-                        .clip(CircleShape)
-                        .background(color = Color(0xFFCCA43B))
-                        .border(
-                            width = 2.dp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            shape = CircleShape
-                        )
-                        .weight(0.1f)
+                        .weight(0.77f)
                 )
 
                 IconButton(
@@ -468,6 +466,15 @@ fun CategoriesListScreen(navController: NavController) {
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ){
+                        Divider(
+                            modifier = Modifier
+                                .height(40.dp)
+                                .weight(0.01f),
+                            color = hexToColor(categoria.cor)
+                        )
+
+                        Spacer(Modifier.weight(0.02f))
+
                         Text(
                             text = categoria.nome,
                             style = MaterialTheme.typography.bodyLarge.copy(
@@ -475,20 +482,7 @@ fun CategoriesListScreen(navController: NavController) {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(0.7f)
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(35.dp)
-                                .clip(CircleShape)
-                                .background(color = hexToColor(categoria.cor))
-                                .border(
-                                    width = 2.dp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    shape = CircleShape
-                                )
-                                .weight(0.1f)
+                                .weight(0.77f)
                         )
 
                         IconButton(
