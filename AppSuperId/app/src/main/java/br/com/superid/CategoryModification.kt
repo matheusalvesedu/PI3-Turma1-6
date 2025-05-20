@@ -10,17 +10,22 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Adb
@@ -32,15 +37,19 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,6 +60,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toArgb
@@ -58,6 +68,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -409,6 +420,15 @@ fun CategoriesListScreen(navController: NavController) {
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ){
+                Divider(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .weight(0.01f),
+                    color = Color(0xFFCCA43B)
+                )
+
+                Spacer(Modifier.weight(0.02f))
+
                 Text(
                     text = "Sites Web",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -416,7 +436,7 @@ fun CategoriesListScreen(navController: NavController) {
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(0.8f)
+                        .weight(0.77f)
                 )
 
                 IconButton(
@@ -446,6 +466,15 @@ fun CategoriesListScreen(navController: NavController) {
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ){
+                        Divider(
+                            modifier = Modifier
+                                .height(40.dp)
+                                .weight(0.01f),
+                            color = hexToColor(categoria.cor)
+                        )
+
+                        Spacer(Modifier.weight(0.02f))
+
                         Text(
                             text = categoria.nome,
                             style = MaterialTheme.typography.bodyLarge.copy(
@@ -453,7 +482,7 @@ fun CategoriesListScreen(navController: NavController) {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(0.8f)
+                                .weight(0.77f)
                         )
 
                         IconButton(
@@ -580,20 +609,29 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
             Button(
                 onClick = {
                     navController.navigate("editColor")
-                }
+                },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
             ) {
-                Text(
-                    text = "Alterar cor"
+                Text("Alterar cor",
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(120.dp))
 
             Button(
-                onClick = { alterarCategoria(uid, idDaCategoria, novoNome, novaCor, context, navController)}
+                onClick = { alterarCategoria(uid, idDaCategoria, novoNome, novaCor, context, navController)},
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(60.dp)
             ) {
                 Text(
                     text = "Salvar",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
         }
@@ -659,18 +697,29 @@ fun NewCategoryScreen(navController: NavController){
             Button(
                 onClick = {
                     navController.navigate("editColor")
-                }
+                },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
             ) {
-                Text(
-                    text = "Alterar cor"
+                Text("Alterar cor",
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
+            Spacer(modifier = Modifier.height(120.dp))
+
             Button(
-                onClick = { adicionarCategoria(uid, nome, novaCor, context, navController) }
+                onClick = { adicionarCategoria(uid, nome, novaCor, context, navController) },
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(60.dp)
             ) {
                 Text(
                     text = "Salvar",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
 
@@ -718,19 +767,30 @@ fun EditCategoryColorScreen(navController: NavController){
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            Text(
+                text = "Exemplo",
+                style = MaterialTheme.typography.titleLarge
+            )
+
             Button(
                 onClick = {},
                 colors = ButtonDefaults.buttonColors(
                     containerColor = selectedColor
+                ),
+                border = BorderStroke(
+                    width = 3.dp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             ){
                 Text(
-                    text = "Exemplo",
+                    text = "Nova cor",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = AppColors.gunmetal
                     )
                 )
             }
+
+            Spacer(modifier = Modifier.height(72.dp))
 
             Button(
                 onClick = {
@@ -739,11 +799,17 @@ fun EditCategoryColorScreen(navController: NavController){
                         ?.savedStateHandle
                         ?.set("novaCor", colorHex)
                     navController.popBackStack()
-                }
+                },
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(60.dp)
             ) {
                 Text(
                     text = "Continuar",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
         }
