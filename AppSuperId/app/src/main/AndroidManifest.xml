@@ -22,11 +22,6 @@
             android:label="@string/title_activity_tour"
             android:theme="@style/Theme.SuperID" />
         <activity
-            android:name=".Tour"
-            android:exported="false"
-            android:label="@string/title_activity_tour"/
-            android:theme="@style/Theme.SuperID" />
-        <activity
             android:name=".QRCodeActivity"
             android:exported="false"
             android:label="@string/title_activity_qrcode"
