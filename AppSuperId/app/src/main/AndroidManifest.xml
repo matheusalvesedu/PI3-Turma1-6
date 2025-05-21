@@ -13,10 +13,20 @@
         android:theme="@style/Theme.SuperID"
         tools:targetApi="31">
         <activity
+            android:name=".TourActivity"
+            android:exported="false"
+            android:label="@string/title_activity_tour"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".Tour"
+            android:exported="false"
+            android:label="@string/title_activity_tour"
+            android:theme="@style/Theme.SuperID" />
+        <activity
             android:name=".CategoryModification"
             android:exported="false"
             android:label="@string/title_activity_category_modification"
-            android:theme="@style/Theme.SuperID"/>
+            android:theme="@style/Theme.SuperID" />
         <activity
             android:name=".ChangeOrDeleteActivity"
             android:exported="false"

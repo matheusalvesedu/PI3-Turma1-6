@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import br.com.superid.ui.theme.AppColors
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.core.content.edit
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,12 +63,11 @@ fun loginUser(
     val auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, password).addOnCompleteListener{ task->
         if (task.isSuccessful){
-            Toast.makeText(context, "Logado com sucesso!", Toast.LENGTH_SHORT).show()
             Log.i("AUTH-TESTE", "LOGIN REALIZADO"+
                     "UID: ${task.result.user!!.uid}")
 
             onSuccess()
-            mudarTela(context, PrincipalScreenActivity::class.java)
+
         }else{
             Toast.makeText(context, "Erro: Login não realizado", Toast.LENGTH_LONG).show()
             Log.i("AUTH-TESTE","Login não realizado")
@@ -92,11 +94,31 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     var passwordVisible by remember {mutableStateOf(false)}
     var activity = LocalActivity.current
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val userSharedPreferences = context.getSharedPreferences("user_prefs",Context.MODE_PRIVATE)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            activityBackButton(activity)
+            TopAppBar(
+                modifier = Modifier.height(80.dp),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.primary
+                ),
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = {
+                        activity?.finish()
+                        mudarTela(context, InitialPageActivity::class.java)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                },
+            )
         }
     )
     { innerPadding ->
@@ -205,7 +227,9 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                         context = context,
                         onSuccess = {
                             isLoading = false
-                            mudarTela(context, InitialPageActivity::class.java)
+                            userSharedPreferences.edit() { putBoolean("is_logged", true) }
+                            mudarTela(context, PrincipalScreenActivity::class.java)
+                            Toast.makeText(context, "Logado com sucesso!", Toast.LENGTH_SHORT).show()
                         },
                         onFailure = { exception ->
                             isLoading = false

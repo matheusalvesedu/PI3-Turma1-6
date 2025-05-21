@@ -1,5 +1,6 @@
 package br.com.superid
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -44,15 +45,24 @@ class InitialPageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            SuperIDTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    TelaInicialApp()
+
+        val userSharedPreferences = getSharedPreferences("user_prefs",Context.MODE_PRIVATE)
+        val loggedIn = userSharedPreferences.getBoolean("is_logged",false)
+
+        if(!loggedIn){
+            setContent {
+                SuperIDTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        TelaInicialApp()
+                    }
                 }
             }
+        }else{
+            mudarTela(this, PrincipalScreenActivity::class.java)
+            finish()
         }
     }
 }
