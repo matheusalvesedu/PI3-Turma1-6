@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -97,7 +99,26 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            activityBackButton(activity)
+            TopAppBar(
+                modifier = Modifier.height(80.dp),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.primary
+                ),
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = {
+                        activity?.finish()
+                        mudarTela(context, InitialPageActivity::class.java)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                },
+            )
         }
     )
     { innerPadding ->

@@ -97,20 +97,32 @@ fun TourScreen() {
                 )
             }
 
-            val title = listOf("blabla", "blabla2", "blabla3", "blabla4", "blabla5")
-            val images = listOf(
-                R.drawable.logo_superid_darkblue,
-                R.drawable.logo_superid_darkblue,
-                R.drawable.logo_superid_darkblue,
-                R.drawable.logo_superid_darkblue,
-                R.drawable.logo_superid_darkblue,
+            val title = listOf(
+                "Botão de cadastrar nova senha.",
+                "Tela de cadastro de nova senha.",
+                "Botão de adicionar/alterar categorias.",
+                "Botão de adicionar nova categoria.",
+                "Botão de alterar cor da categoria.",
+                "Tela de alteração de cor da categoria.",
+                "Botão de alterar categoria existente.",
+                "Botão de excluir categoria.",
+                "Botão de escanear QRCode.",
+                "Botão de sair da conta."
             )
-            val descriptions =
-                listOf("lelelele1", "lelelele2", "lelelel3", "llelelelel4", "lelele5")
+            val images = listOf(
+                R.drawable.tour_1,
+                R.drawable.tour_2,
+                R.drawable.tour_3,
+                R.drawable.tour_4,
+                R.drawable.tour_5,
+                R.drawable.tour_6,
+                R.drawable.tour_7,
+                R.drawable.tour_8,
+                R.drawable.tour_9,
+                R.drawable.tour_10
+            )
 
-            val pagerState = rememberPagerState(pageCount = {
-                5
-            })
+            val pagerState = rememberPagerState(pageCount = {10})
 
             Box(
                 modifier = Modifier
@@ -129,36 +141,16 @@ fun TourScreen() {
                         verticalArrangement = Arrangement.SpaceAround
                     ) {
 
-                        Text(
-                            text = title[page],
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier
-                                .padding(10.dp)
-                        )
-
                         Image(
                             painter = painterResource(id = images[page]),
                             contentDescription = "Print da funcionalidade ${title[page]}",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(300.dp)
+                                .height(600.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .shadow(4.dp)
                         )
 
-                        Text(
-                            text = descriptions[page],
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 16.sp
-                            ),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp)
-                        )
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
 
@@ -166,7 +158,7 @@ fun TourScreen() {
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = if (pagerState.currentPage == pagerState.pageCount - 1) 90.dp else 32.dp),
+                            .padding(bottom = if (pagerState.currentPage == pagerState.pageCount - 1) 70.dp else 32.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         repeat(pagerState.pageCount) { iteration ->

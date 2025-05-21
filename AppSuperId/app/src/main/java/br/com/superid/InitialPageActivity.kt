@@ -115,7 +115,7 @@ fun TelaInicial(modifier: Modifier = Modifier){
 
         Button(
             onClick = {
-                mudarTela(context, SignUpActivity::class.java)
+                mudarTela(context, TourActivity::class.java)
             },
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
