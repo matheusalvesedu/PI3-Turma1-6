@@ -188,28 +188,25 @@ fun createUser(
     onSuccess: () -> Unit,
     onFailure: () -> Unit
 ) {
-
     val auth = Firebase.auth
 
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if(task.isSuccessful){
-
                 val user = auth.currentUser
-
                 saveNewAccountToDB(user,name,email,deviceId)
                 sendEmailVerification(user,context)
                 onSuccess()
-
                 Log.i("CREATION-TEST", "Usuario criado com sucesso UID -> ${user?.uid} ")
             } else {
-
-                onFailure()
-
-                Log.i("CREATION-TEST", "Usuário não criado.")
-                task.exception?.let { e ->
-                    Log.e("CREATION-ERROR", "Erro ao criar usuário", e)
+                val exception = task.exception
+                if (exception is com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+                    Toast.makeText(context, "Este e-mail já está sendo usado por outra conta.", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Erro no servidor. Tente novamente mais tarde.", Toast.LENGTH_LONG).show()
                 }
+                Log.e("CREATION-ERROR", "Erro ao criar usuário", exception)
+                onFailure()
             }
         }
 }
