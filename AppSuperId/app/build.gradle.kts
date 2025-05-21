@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "br.com.superid"
-        minSdk = 33
+        minSdk = 30
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.media3:media3-common-ktx:1.6.1")
     implementation("com.google.android.material:material:1.12.0")
+
     implementation("androidx.media3:media3-common-ktx:1.7.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -104,4 +105,19 @@ dependencies {
     
     // libs do Color Picker
     implementation(libs.colorpicker.compose)
+
+    // Permissions
+    implementation(libs.accompanistPermissions)
+
+    // CameraX dependencies for camera integration
+    implementation(libs.androidx.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.androidx.camera.extensions)
+
+    // ML Kit Barcode Scanning
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.camera.mlkit.vision)
+
 }

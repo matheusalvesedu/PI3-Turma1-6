@@ -692,7 +692,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
 
     var isVerified by remember { mutableStateOf(false) }
     val auth = Firebase.auth
-    var context = LocalContext.current
+    val context = LocalContext.current
 
     LaunchedEffect(true) {
         while(!isVerified){

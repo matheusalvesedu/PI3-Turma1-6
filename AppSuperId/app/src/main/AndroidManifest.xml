@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature android:name="android.hardware.camera.any" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -20,7 +24,12 @@
         <activity
             android:name=".Tour"
             android:exported="false"
-            android:label="@string/title_activity_tour"
+            android:label="@string/title_activity_tour"/
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".QRCodeActivity"
+            android:exported="false"
+            android:label="@string/title_activity_qrcode"
             android:theme="@style/Theme.SuperID" />
         <activity
             android:name=".CategoryModification"

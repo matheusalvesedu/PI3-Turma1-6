@@ -180,12 +180,19 @@ fun TelaPrincipal(
                         }
                     },
                     actions = {
-                        Icon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            contentDescription = null,
-                            modifier = Modifier.size(42.dp)
-                        )
+                        IconButton(
+                            onClick = {
+                                mudarTela(context, QRCodeActivity::class.java)
+
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.QrCodeScanner,
+                                contentDescription = "Escanear QR Code",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(42.dp)
+                            )
+                        }
                     }
                 )
             }
