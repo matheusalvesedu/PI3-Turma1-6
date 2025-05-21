@@ -7,109 +7,279 @@
     <title>Login</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        :root {
+            --dark-navy: #303639;
+            --dark-gray: #242F40;
+            --gold: #CCA43B;
+            --light-gray: #E5E5E5;
+            --white: #FFFFFF;
+            --error: #dc3545;
+        }
+
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            /* Define altura total */
+            min-height: 100vh;
+            background-color: var(--dark-navy);
             display: flex;
             align-items: center;
-            justify-content: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
-        .login-container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding-top: 100px;
+        .container {
+            max-width: 1200px;
+            padding: 20px;
         }
 
-        .divider {
+        .card {
+            background-color: var(--white);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 3rem !important;
+        }
+
+        .login-title {
+            color: var(--dark-gray);
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
             text-align: center;
-            margin: 20px 0;
+        }
+
+        .form-control {
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 0.2rem rgba(204, 164, 59, 0.15);
+        }
+
+        .password-container {
             position: relative;
         }
 
-        .divider:before,
-        .divider:after {
-            content: "";
+        .password-container .btn {
             position: absolute;
+            right: 12px;
             top: 50%;
-            width: 45%;
-            height: 1px;
-            background-color: #dee2e6;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--dark-gray);
+            padding: 0.5rem;
+            z-index: 5;
         }
 
-        .divider:before {
-            left: 0;
+        .password-container .btn:hover,
+        .password-container .btn:focus {
+            color: var(--gold);
+            background: none;
+            box-shadow: none;
         }
 
-        .divider:after {
-            right: 0;
+        .btn {
+            padding: 0.8rem 1.5rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-dark {
+            background-color: var(--dark-gray);
+            border-color: var(--dark-gray);
+            color: var(--white);
+        }
+
+        .btn-dark:hover {
+            background-color: var(--dark-navy);
+            border-color: var(--dark-navy);
+        }
+
+        .btn-primary {
+            background-color: var(--gold);
+            border-color: var(--gold);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #b18d33;
+            border-color: #b18d33;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--dark-gray);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        .social-login-btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-login-btn i {
+            font-size: 1.2rem;
+        }
+
+        .social-login-btn.google {
+            background-color: #fff;
+            color: #333;
+            border: 2px solid var(--light-gray);
+        }
+
+        .social-login-btn.google:hover {
+            background-color: #f8f9fa;
+        }
+
+        .social-login-btn.super-id {
+            background-color: var(--dark-navy);
+            border-color: var(--dark-navy);
+            color: var(--white);
+        }
+
+        .social-login-btn.super-id:hover {
+            background-color: var(--dark-gray);
+            border-color: var(--dark-gray);
+        }
+
+        .form-text {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .form-text a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-text a:hover {
+            color: #b18d33;
+            text-decoration: underline;
+        }
+
+        .invalid-feedback {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .alert {
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 576px) {
+            .card-body {
+                padding: 2rem !important;
+            }
+
+            .login-title {
+                font-size: 1.75rem;
+            }
         }
     </style>
-    <!-- Custom CSS -->
-
 </head>
 
 <body>
     <div class="container">
-        <div class="login-container col-auto">
-            <div class="card shadow">
-                <div class="card-body p-4">
-                    <h1 class="text-center mb-4 fs-2">Login</h1>
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="alertPlaceholder"></div>
+                        
+                        <form id="loginForm" class="needs-validation" novalidate>
+                            <h1 class="login-title">Bem-vindo de volta</h1>
 
-                    <!-- Login Form -->
-                    <form id="loginForm" class="needs-validation" novalidate>
-                        <!-- Email Field -->
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" placeholder="seu@email.com"
-                                aria-describedby="emailHelp" required>
-                            <div class="invalid-feedback">
-                                Por favor, digite um endereço de email válido.
+                            <div class="mb-4">
+                                <input type="email" id="email" class="form-control" placeholder="Email" required />
+                                <div class="invalid-feedback">
+                                    Por favor, insira um email válido.
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Password Field -->
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="password" placeholder="Digite sua senha"
-                                required>
-                            <div class="invalid-feedback">
-                                Por favor, digite sua senha.
+                            <div class="mb-4 password-container">
+                                <input type="password" id="password" class="form-control" placeholder="Senha" required />
+                                <button type="button" class="btn" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <div class="invalid-feedback">
+                                    Por favor, insira sua senha.
+                                </div>
                             </div>
-                        </div>
 
+                            <div class="mb-4 d-flex justify-content-between align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                                    <label class="form-check-label form-text" for="rememberMe">
+                                        Lembrar-me
+                                    </label>
+                                </div>
+                                <a href="#" class="form-text">Esqueceu a senha?</a>
+                            </div>
 
-                        <!-- Login Button -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Entrar</button>
-                        </div>
-                    </form>
+                            <button type="submit" class="btn btn-primary w-100 mb-3">
+                                Entrar
+                            </button>
 
-                    <!-- Divider -->
-                    <div class="divider">
-                        <span class="bg-white px-2">ou</span>
-                    </div>
+                            <div class="divider">
+                                <span>ou continue com</span>
+                            </div>
 
-                    <!-- SuperId Login Button -->
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-outline-secondary" id="superIdLogin">
-                            Entrar com SuperId
-                        </button>
-                    </div>
+                            <div class="mb-4">
+                                <button type="button" class="social-login-btn google mb-3">
+                                    <i class="bi bi-google"></i>
+                                    Continuar com Google
+                                </button>
+                                <button type="button" class="social-login-btn super-id" id="superIdLogin">
+                                    <i class="bi bi-qr-code"></i>
+                                    Entrar com Super ID
+                                </button>
+                            </div>
 
-                    <div class="d-grid gap-2" style="margin-top: 10px;">
-                        <button type="button" class="btn btn-outline-dark" id="githubLogin">Entrar com GitHub</button>
-                    </div>
-
-
-                    <!-- Additional Links -->
-                    <div class="text-center mt-3">
-                        <a href="#" class="text-decoration-none">Esqueceu sua senha?</a>
-                        <p class="mt-3 mb-0">Não tem uma conta? <a href="#" class="text-decoration-none">Registre-se</a>
-                        </p>
+                            <div class="text-center">
+                                <span class="form-text">
+                                    Não tem uma conta? <a href="#">Cadastre-se</a>
+                                </span>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -118,38 +288,78 @@
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Form Validation Script -->
     <script>
-        // Form validation
-        (function () {
-            const forms = document.querySelectorAll('.needs-validation');
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#password');
+            const form = document.querySelector('#loginForm');
+            const alertPlaceholder = document.querySelector('#alertPlaceholder');
 
-            Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('bi-eye');
+                this.querySelector('i').classList.toggle('bi-eye-slash');
+            });
+
+            // Form validation
+            form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 event.stopPropagation();
-                } else {
-                event.preventDefault();
-                // Show success feedback
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-success mt-3';
-                alertDiv.setAttribute('role', 'alert');
-                alertDiv.textContent = 'Login realizado com sucesso!';
-                form.parentNode.insertBefore(alertDiv, form.nextSibling);
+                
+                if (form.checkValidity()) {
+                    // Show loading state
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Entrando...
+                    `;
+
+                    // Simulate API call
+                    setTimeout(() => {
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                        
+                        // Show success message
+                        showAlert('Login realizado com sucesso!', 'success');
+                        
+                        // Redirect to home page
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 1500);
+                    }, 2000);
                 }
+
                 form.classList.add('was-validated');
-            }, false);
             });
 
-            // SuperId login handler
-            document.getElementById('superIdLogin').addEventListener('click', function () {
-            window.location.href = 'QRCode.html';
+            // Super ID login handler
+            document.getElementById('superIdLogin').addEventListener('click', function() {
+                // Clean up any previous login attempts
+                localStorage.removeItem('loginToken');
+                localStorage.removeItem('userId');
+                
+                // Redirect to QR Code page
+                window.location.href = 'QRcode.html';
             });
-        })();
 
+            // Alert helper
+            function showAlert(message, type) {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                alertPlaceholder.innerHTML = '';
+                alertPlaceholder.append(wrapper);
+            }
+        });
     </script>
 </body>
-
 </html>
