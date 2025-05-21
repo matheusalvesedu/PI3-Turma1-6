@@ -7,4 +7,5 @@
     <string name="title_activity_category_modification">CategoryModification</string>
     <string name="title_activity_cadastro_senha">CadastroSenhaActivity</string>
     <string name="title_activity_change_or_delete">ChangeOrDeleteActivity</string>
+    <string name="title_activity_tour">Tour</string>
 </resources>

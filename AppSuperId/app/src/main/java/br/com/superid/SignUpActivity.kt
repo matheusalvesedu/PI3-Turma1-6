@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,6 +82,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
+import androidx.core.content.edit
 
 class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -312,7 +314,8 @@ fun CheckBoxTermosUso(
                         Text("Fechar", color = MaterialTheme.colorScheme.primary)
                     }
                 },
-                modifier = Modifier.background(color = AppColors.white)
+                modifier = Modifier
+                    .background(color = AppColors.white)
             )
         }
     }
@@ -531,19 +534,12 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
     val passwordRequirements = checkPasswordRequirements(password)
     var termosAceitos by remember { mutableStateOf(false) }
 
+
     val context = LocalContext.current
+    val userSharedPreferences = context.getSharedPreferences("user_prefs",Context.MODE_PRIVATE)
     val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
     var isLoading by remember { mutableStateOf(false) }
-
-    // Delay visual na criação de conta
-    var shouldNavigate by remember { mutableStateOf(false) }
-    LaunchedEffect(shouldNavigate) {
-        if (shouldNavigate) {
-            kotlinx.coroutines.delay(1000)
-            navController.navigate("verification/$name/$email")
-        }
-    }
 
     val isPasswordValid = passwordRequirements.hasDigit &&
             passwordRequirements.hasUppercase &&
@@ -642,7 +638,10 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         password,
                         context,
                         deviceId,
-                        onSuccess = {shouldNavigate = true},
+                        onSuccess = {
+                            userSharedPreferences.edit() { putBoolean("is_logged", true) }
+                            navController.navigate("verification/$name/$email")
+                        },
                         onFailure = {
                             isLoading = false
                             Toast.makeText(context, "Erro ao criar conta\nTente Novamente.", Toast.LENGTH_LONG).show()
@@ -655,7 +654,6 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (password.isNotBlank() &&
                         isPasswordValid &&
-                        !shouldNavigate &&
                         password == passwordConfirm &&
                         termosAceitos) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -680,7 +678,6 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                         ),
                         color = if (password.isNotBlank() &&
                             isPasswordValid &&
-                            !shouldNavigate &&
                             password == passwordConfirm &&
                             termosAceitos) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
@@ -706,7 +703,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
-                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
+                mudarTelaFinish(context, TourActivity::class.java)
             }
 
             delay(3000)
