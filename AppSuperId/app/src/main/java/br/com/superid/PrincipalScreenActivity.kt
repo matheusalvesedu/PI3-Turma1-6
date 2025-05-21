@@ -46,11 +46,13 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
@@ -96,34 +98,8 @@ fun TelaPrincipal(
     )
     var context = LocalContext.current
     var expandedLogout by remember { mutableStateOf(false) }
-    
-    // Add email verification check
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    var showVerificationDialog by remember { mutableStateOf(!currentUser?.isEmailVerified!!) }
 
-    if (showVerificationDialog) {
-        AlertDialog(
-            onDismissRequest = { showVerificationDialog = false },
-            title = { Text("E-mail não verificado") },
-            text = { 
-                Text("Por favor, verifique seu e-mail para ter acesso a todas as funcionalidades do app.") 
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    currentUser?.sendEmailVerification()
-                    Toast.makeText(context, "E-mail de verificação reenviado!", Toast.LENGTH_LONG).show()
-                    showVerificationDialog = false
-                }) {
-                    Text("Reenviar e-mail")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showVerificationDialog = false }) {
-                    Text("Fechar")
-                }
-            }
-        )
-    }
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     Scaffold(
         modifier = modifier
@@ -188,6 +164,17 @@ fun TelaPrincipal(
                                 expanded = expandedLogout,
                                 onDismissRequest = { expandedLogout = false }
                             ) {
+
+                                DropdownMenuItem(
+                                    text = { Text("Verifique sua conta") },
+                                    onClick = {
+                                        expandedLogout = false
+
+                                        currentUser?.sendEmailVerification()
+                                        Toast.makeText(context, "E-mail de verificação reenviado!", Toast.LENGTH_LONG).show()
+                                    }
+                                )
+
                                 DropdownMenuItem(
                                     text = { Text("Sair") },
                                     onClick = {
@@ -208,7 +195,12 @@ fun TelaPrincipal(
                     actions = {
                         IconButton(
                             onClick = {
-                                mudarTela(context, QRCodeActivity::class.java)
+                                currentUser?.reload()
+                                if(currentUser?.isEmailVerified == true){
+                                    mudarTela(context, QRCodeActivity::class.java)
+                                }else{
+                                    Toast.makeText(context, "É necessário verificar o e-mail para utilizar esta funcionalidade.", Toast.LENGTH_SHORT).show()
+                                }
 
                             }
                         ) {
@@ -404,7 +396,7 @@ fun ScreenContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Verifique seu e-mail para ter acesso a todas as funcionalidades e não perder sua conta",
+                                        text = "Verifique seu e-mail para ter acesso a todas as funcionalidades e não perder sua conta.",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                         modifier = Modifier.weight(1f)
