@@ -123,7 +123,7 @@ fun TelaPrincipal(
                                 .fillMaxWidth()
                                 .height(55.dp),
                             placeholder = {
-                                Text("Procure por sua Senha", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                Text("Procure sua Senha", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                             },
                             textStyle = MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = 14.sp,
@@ -528,7 +528,7 @@ fun CardItem(apelido: String,
                         onDismissRequest = { showOptionsMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Alterar senha") },
+                            text = { Text("Alterar dados") },
                             onClick = {
                                 showOptionsMenu = false
                                 val intent = Intent(context, ChangeOrDeleteActivity::class.java)
