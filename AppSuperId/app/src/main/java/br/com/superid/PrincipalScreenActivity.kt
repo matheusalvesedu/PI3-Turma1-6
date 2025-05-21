@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.draw.clip
-import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -47,12 +46,10 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import androidx.media3.common.util.UnstableApi
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
@@ -128,6 +125,10 @@ fun TelaPrincipal(
                             placeholder = {
                                 Text("Procure por sua Senha", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
                             },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
                             singleLine = true,
                             shape = RoundedCornerShape(50.dp),
                             colors = TextFieldDefaults.colors(
@@ -140,10 +141,19 @@ fun TelaPrincipal(
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
                             trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Buscar"
-                                )
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { onSearchQueryChange("") }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Limpar busca"
+                                        )
+                                    }
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Buscar"
+                                    )
+                                }
                             }
                         )
                     },
@@ -182,7 +192,7 @@ fun TelaPrincipal(
                                         FirebaseAuth.getInstance().signOut()
                                         Toast.makeText(context, "Sessão encerrada.", Toast.LENGTH_SHORT).show()
                                         val userSharedPreferences = context.getSharedPreferences("user_prefs",Context.MODE_PRIVATE)
-                                        userSharedPreferences.edit() { putBoolean("is_logged", false) }
+                                        userSharedPreferences.edit { putBoolean("is_logged", false) }
                                         val intent = Intent(context, LoginActivity::class.java)
                                         intent.flags =
                                             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
