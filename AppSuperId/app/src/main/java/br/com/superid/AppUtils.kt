@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -28,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -89,6 +92,53 @@ fun inputBox(variavel: String, onValueChange: (String) -> Unit, texto: String){
         )
     )
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun inputBoxMaxLength(variavel: String, onValueChange: (String) -> Unit, texto: String, maxLength: Int = Int.MAX_VALUE) {
+    Column(modifier = Modifier.width(300.dp)) {
+        TextField(
+            value = variavel,
+            onValueChange = {
+                if (it.length <= maxLength) {
+                    onValueChange(it)
+                }
+            },
+            label = {
+                Text(
+                    text = texto,
+                    fontSize = 12.sp,
+                    fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            modifier = Modifier
+                .width(300.dp)
+                .padding(10.dp),
+            singleLine = true,
+            colors = TextFieldDefaults.textFieldColors(
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                containerColor = Color.Transparent,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
+            )
+        )
+
+        // Mostra o aviso caso tenha atingido o limite
+        if (variavel.length >= maxLength) {
+            Text(
+                text = "Limite de $maxLength caracteres atingido",
+                color = Color.Red,
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
 
 // Função para criar caixas com input de senha
 @OptIn(ExperimentalMaterial3Api::class)
@@ -228,7 +278,8 @@ fun hexToColor(hexString: String?): Color {
 // Objeto para armazenar ID e nome de uma categoria
 data class Categoria(
     val id: String,
-    val nome: String
+    val nome: String,
+    val cor: String
 )
 
 // Objeto para armazenar todas as informações das senhas cadastradas
@@ -259,9 +310,10 @@ fun getCategorias(userId: String, context: Context, onResult: (List<Categoria>) 
             val categorias = result.documents
                 .mapNotNull { doc ->
                     val nome = doc.getString("Nome")
+                    val cor = doc.getString("Cor")
                     val id = doc.id
-                    if (nome != null) {
-                        Categoria(id = id, nome = nome)
+                    if (nome != null && cor != null) {
+                        Categoria(id = id, nome = nome, cor = cor)
                     } else null
                 }
             onResult(categorias)

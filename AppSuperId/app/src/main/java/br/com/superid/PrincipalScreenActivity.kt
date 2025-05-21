@@ -70,10 +70,13 @@ class PrincipalScreenActivity : ComponentActivity() {
 @Composable
 fun TelaPrincipalPreview() {
     var searchQuery by remember { mutableStateOf("") }
+    var shouldReload by remember { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxSize()) {
         TelaPrincipal(modifier = Modifier,
             searchQuery = searchQuery,
-            onSearchQueryChange = { searchQuery = it }
+            onSearchQueryChange = { searchQuery = it },
+            shouldReload = shouldReload,
+            onReloadChange = { shouldReload = it }
         )
     }
 }
@@ -84,7 +87,9 @@ fun TelaPrincipalPreview() {
 fun TelaPrincipal(
     modifier: Modifier = Modifier,
     searchQuery: String,
-    onSearchQueryChange: (String) -> Unit
+    onSearchQueryChange: (String) -> Unit,
+    shouldReload: Boolean,
+    onReloadChange: (Boolean) -> Unit
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
@@ -202,13 +207,20 @@ fun TelaPrincipal(
     ) { paddingValues ->
         ScreenContent(
             paddingValues = paddingValues,
-            searchQuery = searchQuery
+            searchQuery = searchQuery,
+            shouldReload = shouldReload,
+            onReloadChange = onReloadChange
         )
     }
 }
 
 @Composable
-fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
+fun ScreenContent(
+    paddingValues: PaddingValues,
+    searchQuery: String,
+    shouldReload: Boolean,
+    onReloadChange: (Boolean) -> Unit
+) {
     val senhas = remember { mutableStateListOf<SenhaData>() }
     val categorias = remember { mutableStateListOf<CategoriaData>() }
     val db = FirebaseFirestore.getInstance()
@@ -217,10 +229,17 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     var isLoading by remember { mutableStateOf(true) }
-
     var dataLoadedSuccessfully by remember { mutableStateOf(false) }
 
-    LaunchedEffect(userId) {
+    val filteredSenhas = remember(senhas, searchQuery, selectedCategory) {
+        senhas.filter { senha ->
+            val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
+            matchesSearch && matchesCategory
+        }.toMutableStateList()
+    }
+
+    LaunchedEffect(userId, shouldReload) {
         if (userId != null) {
             isLoading = true
             db.collection("accounts")
@@ -238,17 +257,26 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
                         val idSenha = document.id
                         senhas.add(SenhaData(apelido, login, senha, descricao, categoria, idSenha))
                     }
+                    filteredSenhas.clear()
+                    filteredSenhas.addAll(senhas.filter { senha ->
+                        val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
+                        val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
+                        matchesSearch && matchesCategory
+                    })
                     isLoading = false
                     dataLoadedSuccessfully = true
+                    onReloadChange(false)
                 }
                 .addOnFailureListener { e ->
                     isLoading = false
                     dataLoadedSuccessfully = false
                     Toast.makeText(context, "Erro ao carregar senhas: ${e.message}", Toast.LENGTH_SHORT).show()
+                    onReloadChange(false)
                 }
         } else {
             isLoading = false
             dataLoadedSuccessfully = false
+            onReloadChange(false)
         }
     }
 
@@ -285,24 +313,11 @@ fun ScreenContent(paddingValues: PaddingValues, searchQuery: String) {
                 .addOnSuccessListener {
                     Toast.makeText(context, "Senha excluída com sucesso!", Toast.LENGTH_SHORT).show()
                     senhas.removeAll { it.id == idSenha }
+                    onReloadChange(true)
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(context, "Erro ao excluir senha: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-        }
-    }
-
-    // Lógica de filtragem
-    val filteredSenhas = remember(
-        senhas,
-        searchQuery,
-        selectedCategory,
-        dataLoadedSuccessfully
-    ) {
-        senhas.filter { senha ->
-            val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
-            val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
-            matchesSearch && matchesCategory
         }
     }
 
@@ -383,7 +398,6 @@ fun CardItem(apelido: String,
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
-            .height(220.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -402,7 +416,9 @@ fun CardItem(apelido: String,
 
                 Text(
                     text = apelido,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 24.sp
+                    ),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
@@ -479,16 +495,14 @@ fun CardItem(apelido: String,
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = login,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 16.dp)
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -496,7 +510,7 @@ fun CardItem(apelido: String,
             ) {
                 Text(
                     text = "Password: " + if (senhaVisivel) senha else "•".repeat(senha.length),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
@@ -506,12 +520,11 @@ fun CardItem(apelido: String,
                 ) {
                     Icon(
                         imageVector = if (senhaVisivel) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        modifier = Modifier.size(18.dp),
                         contentDescription = if (senhaVisivel) "Ocultar senha" else "Mostrar senha"
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = descricao,

@@ -212,7 +212,7 @@ fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategor
 
 @SuppressLint("ContextCastToActivity")
 @Composable
-fun CadastroSenhaScreen(){
+fun CadastroSenhaScreen() {
 
     val auth = Firebase.auth
     val user = auth.currentUser
@@ -224,6 +224,8 @@ fun CadastroSenhaScreen(){
     var category by remember { mutableStateOf("") }
 
     var isLoading by remember { mutableStateOf(false) }
+
+    val maxDescriptionLength = 150
 
     val context = LocalContext.current
     val activity = LocalContext.current as? Activity
@@ -245,7 +247,6 @@ fun CadastroSenhaScreen(){
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-
             Text(
                 text = "Cadastre uma nova senha:",
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -253,17 +254,16 @@ fun CadastroSenhaScreen(){
                     color = MaterialTheme.colorScheme.primary
                 ),
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(20.dp)
+                modifier = Modifier.padding(20.dp)
             )
 
             Spacer(modifier = Modifier.size(12.dp))
 
-            inputBox(passwordNickName,{ newPasswordNickName -> passwordNickName = newPasswordNickName },"Digite um apelido para a senha")
+            inputBox(passwordNickName, { newPasswordNickName -> passwordNickName = newPasswordNickName }, "Digite um apelido para a senha")
 
             Spacer(modifier = Modifier.size(12.dp))
 
-            inputBox(login,{ newlogin -> login = newlogin },"Digite seu login (opcional)")
+            inputBox(login, { newLogin -> login = newLogin }, "Digite seu login (opcional)")
 
             Spacer(modifier = Modifier.size(12.dp))
 
@@ -271,12 +271,12 @@ fun CadastroSenhaScreen(){
 
             Spacer(modifier = Modifier.size(12.dp))
 
-            inputBox(description,{ newDescription -> description = newDescription},"Digite sua descrição (opcional)")
+            inputBoxMaxLength(description, { newDescription -> description = newDescription }, "Digite uma descrição (opcional)", 150)
 
             Spacer(modifier = Modifier.size(12.dp))
 
-            if(user != null){
-                DropDown(user,context,category, onCategorySelected = { newCategory -> category = newCategory})
+            if (user != null) {
+                DropDown(user, context, category, onCategorySelected = { newCategory -> category = newCategory })
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -284,7 +284,7 @@ fun CadastroSenhaScreen(){
             Button(
                 onClick = {
                     isLoading = true
-                    if(user != null){
+                    if (user != null) {
                         savePasswordToDb(
                             user,
                             passwordNickName,
@@ -296,17 +296,24 @@ fun CadastroSenhaScreen(){
                                 Toast.makeText(context, "Nova senha cadastrada com sucesso", Toast.LENGTH_LONG).show()
                                 mudarTelaFinish(context, PrincipalScreenActivity::class.java)
                             },
-                            onFailure = {  Toast.makeText(context, "Erro ao cadastrar uma nova senha\nTente Novamente.", Toast.LENGTH_LONG).show() }
+                            onFailure = {
+                                Toast.makeText(context, "Erro ao cadastrar uma nova senha\nTente Novamente.", Toast.LENGTH_LONG).show()
+                            }
                         )
                     }
                 },
                 enabled = password.isNotBlank() && passwordNickName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (password.isNotBlank() &&
-                        passwordNickName.isNotBlank() &&
-                        category.isNotBlank()) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = if (
+                        password.isNotBlank() &&
+                        passwordNickName.isNotBlank()
+                    ) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (
+                        password.isNotBlank() &&
+                        passwordNickName.isNotBlank()
+                    ) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 ),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -314,7 +321,7 @@ fun CadastroSenhaScreen(){
                     .height(80.dp)
                     .padding(bottom = 20.dp)
             ) {
-                if(isLoading) {
+                if (isLoading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.surface,
                         strokeWidth = 2.dp,
@@ -323,13 +330,10 @@ fun CadastroSenhaScreen(){
                 } else {
                     Text(
                         text = "Salvar nova senha",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 20.sp
-                        ),
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         color = if (
                             password.isNotBlank() &&
-                            passwordNickName.isNotBlank() &&
-                            category.isNotBlank()
+                            passwordNickName.isNotBlank()
                         ) MaterialTheme.colorScheme.onPrimary
                         else MaterialTheme.colorScheme.onSurface
                     )
@@ -338,3 +342,4 @@ fun CadastroSenhaScreen(){
         }
     }
 }
+
