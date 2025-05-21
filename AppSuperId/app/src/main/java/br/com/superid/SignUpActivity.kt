@@ -693,20 +693,15 @@ fun VerificationScreen(navController: NavController, name: String, email: String
 
     LaunchedEffect(true) {
         while(!isVerified){
-
             val user = auth.currentUser
-
             user?.reload()
             if(user?.isEmailVerified == true){
                 isVerified = true
                 delay(1500)
                 mudarTelaFinish(context, TourActivity::class.java)
             }
-
             delay(3000)
-
         }
-
     }
 
     Column(
@@ -782,7 +777,7 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 Toast.makeText(context, "E-mail de verificação reenviado com sucesso!", Toast.LENGTH_LONG).show() }
             ) {
                 Text(
-                    text = "Reenviar e-mail dê verificação",
+                    text = "Reenviar e-mail de verificação",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
@@ -791,8 +786,31 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 )
             }
 
-        }else{
+            Spacer(modifier = Modifier.height(20.dp))
 
+            Button(
+                onClick = {
+                    mudarTelaFinish(context, TourActivity::class.java)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                shape = RoundedCornerShape(50.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .height(50.dp)
+            ) {
+                Text(
+                    text = "Continuar sem verificar",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+        }else{
             Text(
                 text = "E-mail verificado!!",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -813,8 +831,6 @@ fun VerificationScreen(navController: NavController, name: String, email: String
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(50.dp)
             )
-
         }
-
     }
 }

@@ -91,13 +91,39 @@ fun TelaPrincipal(
     shouldReload: Boolean,
     onReloadChange: (Boolean) -> Unit
 ) {
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         state = rememberTopAppBarState()
     )
     var context = LocalContext.current
-
     var expandedLogout by remember { mutableStateOf(false) }
+    
+    // Add email verification check
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    var showVerificationDialog by remember { mutableStateOf(!currentUser?.isEmailVerified!!) }
+
+    if (showVerificationDialog) {
+        AlertDialog(
+            onDismissRequest = { showVerificationDialog = false },
+            title = { Text("E-mail não verificado") },
+            text = { 
+                Text("Por favor, verifique seu e-mail para ter acesso a todas as funcionalidades do app.") 
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    currentUser?.sendEmailVerification()
+                    Toast.makeText(context, "E-mail de verificação reenviado!", Toast.LENGTH_LONG).show()
+                    showVerificationDialog = false
+                }) {
+                    Text("Reenviar e-mail")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showVerificationDialog = false }) {
+                    Text("Fechar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         modifier = modifier
@@ -231,9 +257,11 @@ fun ScreenContent(
     val senhas = remember { mutableStateListOf<SenhaData>() }
     val categorias = remember { mutableStateListOf<CategoriaData>() }
     val db = FirebaseFirestore.getInstance()
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    val currentUser = FirebaseAuth.getInstance().currentUser
     val context = LocalContext.current
     var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var showVerificationBanner by remember { mutableStateOf(true) }
+    var showVerificationDialog by remember { mutableStateOf(false) }
 
     var isLoading by remember { mutableStateOf(true) }
     var dataLoadedSuccessfully by remember { mutableStateOf(false) }
@@ -246,11 +274,11 @@ fun ScreenContent(
         }.toMutableStateList()
     }
 
-    LaunchedEffect(userId, shouldReload) {
-        if (userId != null) {
+    LaunchedEffect(currentUser, shouldReload) {
+        if (currentUser != null) {
             isLoading = true
             db.collection("accounts")
-                .document(userId)
+                .document(currentUser.uid)
                 .collection("Senhas")
                 .get()
                 .addOnSuccessListener { result ->
@@ -287,10 +315,10 @@ fun ScreenContent(
         }
     }
 
-    DisposableEffect(userId) {
-        val registration: ListenerRegistration? = if (userId != null) {
+    DisposableEffect(currentUser) {
+        val registration: ListenerRegistration? = if (currentUser != null) {
             db.collection("accounts")
-                .document(userId)
+                .document(currentUser.uid)
                 .collection("Categorias")
                 .addSnapshotListener { snapshot, e ->
                     if (snapshot != null) {
@@ -311,9 +339,9 @@ fun ScreenContent(
     }
 
     fun deletePassword(idSenha: String) {
-        if (userId != null) {
+        if (currentUser != null) {
             db.collection("accounts")
-                .document(userId)
+                .document(currentUser.uid)
                 .collection("Senhas")
                 .document(idSenha)
                 .delete()
@@ -355,6 +383,45 @@ fun ScreenContent(
                             onCategorySelected = { category -> selectedCategory = category },
                             onEditCategorias = { mudarTela(context, CategoryModification::class.java) }
                         )
+                        
+                        // Modified verification reminder
+                        if (currentUser?.isEmailVerified == false && showVerificationBanner) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.errorContainer,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { showVerificationDialog = true }
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Verifique seu e-mail para ter acesso a todas as funcionalidades e não perder sua conta",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(
+                                        onClick = { showVerificationBanner = false }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Fechar",
+                                            tint = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 

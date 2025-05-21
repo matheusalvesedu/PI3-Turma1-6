@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,34 +48,147 @@ class QRCodeActivity : ComponentActivity() {
         setContent {
             SuperIDTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WithPermissionInActivity(
-                        modifier = Modifier.padding(innerPadding),
-                        permission = Manifest.permission.CAMERA,
-                        activity = this
-                    ) {
-                        val context = LocalContext.current
-                        QrScannerScreen(
-                            onQrCodeScanned = { qrCode ->
-                                try {
-                                    val uri = qrCode.toUri()
-                                    val loginToken = uri.getQueryParameter("token") ?: uri.toString()
-                                    if (loginToken.isNotBlank()) {
-                                        handleLoginToken(context = context, loginToken = loginToken)
-                                    } else {
-                                        Toast.makeText(context, "QR Code inválido", Toast.LENGTH_SHORT).show()
-                                    }
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                    Toast.makeText(context, "Erro ao processar QR Code", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            onClose = { finish() }
-                        )
+                    // Check if email is verified
+                    val currentUser = FirebaseAuth.getInstance().currentUser
+                    if (currentUser?.isEmailVerified == true) {
+                        var showPasswordDialog by remember { mutableStateOf(true) }
+                        var isPasswordVerified by remember { mutableStateOf(false) }
+
+                        if (showPasswordDialog && !isPasswordVerified) {
+                            PasswordVerificationDialog(
+                                onPasswordVerified = {
+                                    isPasswordVerified = true
+                                    showPasswordDialog = false
+                                },
+                                onDismiss = { finish() }
+                            )
+                        }
+
+                        if (isPasswordVerified) {
+                            WithPermissionInActivity(
+                                modifier = Modifier.padding(innerPadding),
+                                permission = Manifest.permission.CAMERA,
+                                activity = this
+                            ) {
+                                val context = LocalContext.current
+                                QrScannerScreen(
+                                    onQrCodeScanned = { qrCode ->
+                                        try {
+                                            val uri = qrCode.toUri()
+                                            val loginToken = uri.getQueryParameter("token") ?: uri.toString()
+                                            if (loginToken.isNotBlank()) {
+                                                handleLoginToken(context = context, loginToken = loginToken)
+                                            } else {
+                                                Toast.makeText(context, "QR Code inválido", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                            Toast.makeText(context, "Erro ao processar QR Code", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    onClose = { finish() }
+                                )
+                            }
+                        }
+                    } else {
+                        // Show message and finish activity if email is not verified
+                        LaunchedEffect(Unit) {
+                            Toast.makeText(
+                                this@QRCodeActivity,
+                                "Verifique seu e-mail para usar login sem senha",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            finish()
+                        }
                     }
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PasswordVerificationDialog(
+    onPasswordVerified: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Verificação de Senha",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Digite sua senha") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                )
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    isLoading = true
+                    errorMessage = null
+                    val auth = FirebaseAuth.getInstance()
+                    val currentUser = auth.currentUser
+                    
+                    if (currentUser != null) {
+                        val email = currentUser.email
+                        if (email != null) {
+                            auth.signInWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    isLoading = false
+                                    if (task.isSuccessful) {
+                                        onPasswordVerified()
+                                    } else {
+                                        errorMessage = "Senha incorreta"
+                                    }
+                                }
+                        }
+                    }
+                },
+                enabled = password.isNotEmpty() && !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Verificar")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable
