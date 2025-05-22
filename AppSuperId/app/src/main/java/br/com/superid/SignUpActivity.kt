@@ -24,10 +24,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -291,28 +295,42 @@ fun CheckBoxTermosUso(
             AlertDialog(
                 onDismissRequest = {showPopUp = false},
                 title = { Text("Termos de Uso") },
-                text = { Text("Bem-vindo ao SuperID!\n" +
-                        "\n" +
-                        "Este aplicativo foi desenvolvido com fins educacionais no âmbito do Projeto Integrador 3 da PUC-Campinas. Ao utilizar o SuperID, você concorda com os seguintes termos:\n" +
-                        "\n" +
-                        "1. O SuperID é um gerenciador de autenticações que permite a criação de contas, armazenamento seguro de senhas e login sem senha.\n" +
-                        "2. Seus dados (nome, e-mail, UID do dispositivo) são armazenados no Firebase de forma segura e com fins acadêmicos.\n" +
-                        "3. As senhas cadastradas são criptografadas e associadas a tokens únicos.\n" +
-                        "4. O aplicativo pode ser usado para login em sites parceiros, utilizando QR Code e autenticação segura.\n" +
-                        "5. A redefinição da senha mestre depende da validação do seu e-mail.\n" +
-                        "6. Este app não atende a padrões avançados de segurança da informação e não deve ser usado em ambientes reais ou com dados sensíveis fora do contexto educacional.\n" +
-                        "7. Ao criar sua conta, você declara estar ciente de que o uso do app é exclusivamente acadêmico e que seus dados podem ser apagados ao fim do semestre letivo.\n" +
-                        "\n" +
-                        "Para mais informações, entre em contato com a equipe de desenvolvimento ou os professores responsáveis pelo projeto.\n" +
-                        "\n" +
-                        "PUC-Campinas - Engenharia de Software") },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 400.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(end = 8.dp)
+                    ) {
+                        Text(
+                            text = """
+                        Bem-vindo ao SuperID!
+
+                        Este aplicativo foi desenvolvido com fins educacionais no âmbito do Projeto Integrador 3 da PUC-Campinas. Ao utilizar o SuperID, você concorda com os seguintes termos:
+
+                        1. O SuperID é um gerenciador de autenticações que permite a criação de contas, armazenamento seguro de senhas e login sem senha.
+                        2. Seus dados (nome, e-mail, UID do dispositivo) são armazenados no Firebase de forma segura e com fins acadêmicos.
+                        3. As senhas cadastradas são criptografadas e associadas a tokens únicos.
+                        4. O aplicativo pode ser usado para login em sites parceiros, utilizando QR Code e autenticação segura.
+                        5. A redefinição da senha mestre depende da validação do seu e-mail.
+                        6. Este app não atende a padrões avançados de segurança da informação e não deve ser usado em ambientes reais ou com dados sensíveis fora do contexto educacional.
+                        7. Ao criar sua conta, você declara estar ciente de que o uso do app é exclusivamente acadêmico e que seus dados podem ser apagados ao fim do semestre letivo.
+
+                        Para mais informações, entre em contato com a equipe de desenvolvimento ou os professores responsáveis pelo projeto.
+
+                        PUC-Campinas - Engenharia de Software
+                    """.trimIndent(),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                },
                 confirmButton = {
                     TextButton(onClick = { showPopUp = false }) {
                         Text("Fechar", color = MaterialTheme.colorScheme.primary)
                     }
-                },
-                modifier = Modifier
-                    .background(color = AppColors.white)
+                }
             )
         }
     }
@@ -590,7 +608,16 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
 
             passwordInputBox(password, { newPassword -> password = newPassword }, "Digite sua senha")
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
+                RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
+                RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
+                RequirementItem("1 número",passwordRequirements.hasDigit)
+                RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
+            }
 
             passwordInputBox(passwordConfirm, { newPasswordConfirm -> passwordConfirm = newPasswordConfirm }, "Confirme sua senha")
 
@@ -604,17 +631,6 @@ fun PasswordScreen(navController: NavController, name: String, email: String) {
                     modifier = Modifier
                         .padding(16.dp)
                 )
-            }
-
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                RequirementItem("8 caracteres",passwordRequirements.hasMinLength)
-                RequirementItem("1 letra maiúscula",passwordRequirements.hasUppercase)
-                RequirementItem("1 letra minúscula",passwordRequirements.hasLowerCase)
-                RequirementItem("1 número",passwordRequirements.hasDigit)
-                RequirementItem("1 caractere especial @#$%&+=!",passwordRequirements.hasSpecialChar)
             }
 
             Spacer(modifier = Modifier.size(16.dp))
