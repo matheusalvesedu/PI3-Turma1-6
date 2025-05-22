@@ -5,51 +5,38 @@ import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.widget.Space
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Adb
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,17 +47,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -81,11 +63,12 @@ import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import com.github.skydoves.colorpicker.compose.ColorPickerController
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.dataObjects
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+
 
 class CategoryModification : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,8 +114,6 @@ fun adicionarCategoria(
     cor: String,
     context: Context,
     navController: NavController,
-    onSuccess: () -> Unit = {},
-    onFailure: () -> Unit = {}
 ){
     val db = Firebase.firestore
 
@@ -353,17 +334,14 @@ fun CategoriesListScreen(navController: NavController) {
     val uid = user?.uid ?: return
 
     val context = LocalContext.current
-    val activity = LocalContext.current as? Activity
+    val activity = context as? Activity
 
     var categoriaParaExcluir by remember { mutableStateOf<Categoria?>(null) }
-
     var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
 
     LaunchedEffect(uid) {
-        uid?.let{
-            getCategorias(it, context) { resultado ->
-                categorias = resultado
-            }
+        getCategorias(uid, context) { resultado ->
+            categorias = resultado
         }
     }
 
@@ -371,163 +349,137 @@ fun CategoriesListScreen(navController: NavController) {
         containerColor = MaterialTheme.colorScheme.background,
         topBar = { activityBackButton(activity) }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
             verticalArrangement = Arrangement.Top
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.logo_superid_darkblue),
-                    contentDescription = "Logo do Super ID",
+            item {
+                Box(
                     modifier = Modifier
-                        .size(100.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Row(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Suas categorias",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 16.sp
-                    ),
-                    modifier = Modifier.weight(0.9f)
-                )
-
-                IconButton(
-                    onClick = {navController.navigate("newCategory")},
-                    modifier = Modifier.weight(0.1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Adicionar categoria"
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                Divider(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .weight(0.01f),
-                    color = Color(0xFFCCA43B)
-                )
-
-                Spacer(Modifier.weight(0.02f))
-
-                Text(
-                    text = "Sites Web",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 20.sp
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.77f)
-                )
-
-                IconButton(
-                    onClick = { Toast.makeText(context, "Categoria não alterável." , Toast.LENGTH_LONG).show() },
-                    modifier = Modifier.weight(0.1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar categoria"
+                        painter = painterResource(R.drawable.logo_superid_darkblue),
+                        contentDescription = "Logo do Super ID",
+                        modifier = Modifier.size(100.dp)
                     )
                 }
 
-                IconButton(
-                    onClick = { Toast.makeText(context, "Categoria não excluível.", Toast.LENGTH_SHORT).show() },
-                    modifier = Modifier.weight(0.1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Excluir categoria"
-                    )
-                }
-            }
+                Spacer(modifier = Modifier.height(40.dp))
 
-            categorias.forEach{ categoria ->
-                if (categoria.nome != "Sites Web" && categoria.nome != "Sem Categoria"){
-                    Row(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Divider(
-                            modifier = Modifier
-                                .height(40.dp)
-                                .weight(0.01f),
-                            color = hexToColor(categoria.cor)
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Suas categorias",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                        modifier = Modifier.weight(0.9f)
+                    )
+
+                    IconButton(
+                        onClick = { navController.navigate("newCategory") },
+                        modifier = Modifier.weight(0.1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Adicionar categoria"
                         )
-
-                        Spacer(Modifier.weight(0.02f))
-
-                        Text(
-                            text = categoria.nome,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 20.sp
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(0.77f)
-                        )
-
-                        IconButton(
-                            onClick = { navController.navigate("editCategory/${categoria.id}") },
-                            modifier = Modifier.weight(0.1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar categoria"
-                            )
-                        }
-
-                        IconButton(
-                            onClick = { categoriaParaExcluir = categoria },
-                            modifier = Modifier.weight(0.1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DeleteOutline,
-                                contentDescription = "Excluir categoria"
-                            )
-                        }
                     }
                 }
 
-                if (categoriaParaExcluir != null) {
-                    AlertDialog(
-                        onDismissRequest = { categoriaParaExcluir = null },
-                        title = { Text("Confirmar exclusão") },
-                        text = { Text("Tem certeza de que deseja excluir esta categoria?") },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                excluirCategoria(uid, categoriaParaExcluir!!.nome, context, navController)
-                                categoriaParaExcluir = null
-                            }) {
-                                Text("Sim")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { categoriaParaExcluir = null }) {
-                                Text("Cancelar")
-                            }
-                        }
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .weight(0.01f),
+                        color = Color(0xFFCCA43B)
+                    )
+
+                    Spacer(Modifier.weight(0.02f))
+
+                    Text(
+                        text = "Sites Web",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.77f)
                     )
                 }
             }
+
+            items(categorias.filter { it.nome != "Sites Web" && it.nome != "Sem Categoria" }) { categoria ->
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .weight(0.01f),
+                        color = hexToColor(categoria.cor)
+                    )
+
+                    Spacer(Modifier.weight(0.02f))
+
+                    Text(
+                        text = categoria.nome,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.77f)
+                    )
+
+                    IconButton(
+                        onClick = { navController.navigate("editCategory/${categoria.id}") },
+                        modifier = Modifier.weight(0.1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar categoria"
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { categoriaParaExcluir = categoria },
+                        modifier = Modifier.weight(0.1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Excluir categoria"
+                        )
+                    }
+                }
+            }
+        }
+
+        // Alerta de confirmação fora da LazyColumn
+        if (categoriaParaExcluir != null) {
+            AlertDialog(
+                onDismissRequest = { categoriaParaExcluir = null },
+                title = { Text("Confirmar exclusão") },
+                text = { Text("Tem certeza de que deseja excluir esta categoria?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        excluirCategoria(uid, categoriaParaExcluir!!.nome, context, navController)
+                        categoriaParaExcluir = null
+                    }) {
+                        Text("Sim")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { categoriaParaExcluir = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }

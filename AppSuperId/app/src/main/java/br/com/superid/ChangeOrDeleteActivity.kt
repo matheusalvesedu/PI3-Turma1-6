@@ -124,7 +124,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(
-                text = "Alterar Senha",
+                text = "Alterar Dados",
                 fontSize = 24.sp,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
