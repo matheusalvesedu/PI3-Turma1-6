@@ -70,8 +70,10 @@ class PrincipalScreenActivity : ComponentActivity() {
 fun TelaPrincipalPreview() {
     var searchQuery by remember { mutableStateOf("") }
     var shouldReload by remember { mutableStateOf(false) }
+    
     Box(modifier = Modifier.fillMaxSize()) {
-        TelaPrincipal(modifier = Modifier,
+        TelaPrincipal(
+            modifier = Modifier,
             searchQuery = searchQuery,
             onSearchQueryChange = { searchQuery = it },
             shouldReload = shouldReload,
@@ -79,7 +81,6 @@ fun TelaPrincipalPreview() {
         )
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,8 +96,34 @@ fun TelaPrincipal(
     )
     var context = LocalContext.current
     var expandedLogout by remember { mutableStateOf(false) }
-
     val currentUser = FirebaseAuth.getInstance().currentUser
+    var isEmailVerified by remember { mutableStateOf(currentUser?.isEmailVerified == true) }
+
+    // Update verification status when component is created or shouldReload changes
+    LaunchedEffect(shouldReload) {
+        currentUser?.reload()?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                isEmailVerified = currentUser.isEmailVerified
+            }
+        }
+    }
+
+    // Listen for auth state changes including email verification
+    DisposableEffect(Unit) {
+        val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+            auth.currentUser?.reload()?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    isEmailVerified = auth.currentUser?.isEmailVerified == true
+                }
+            }
+        }
+        
+        FirebaseAuth.getInstance().addAuthStateListener(authStateListener)
+        
+        onDispose {
+            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener)
+        }
+    }
 
     Scaffold(
         modifier = modifier
@@ -174,16 +201,16 @@ fun TelaPrincipal(
                                 expanded = expandedLogout,
                                 onDismissRequest = { expandedLogout = false }
                             ) {
-
-                                DropdownMenuItem(
-                                    text = { Text("Verifique sua conta") },
-                                    onClick = {
-                                        expandedLogout = false
-
-                                        currentUser?.sendEmailVerification()
-                                        Toast.makeText(context, "E-mail de verificação reenviado!", Toast.LENGTH_LONG).show()
-                                    }
-                                )
+                                if (!isEmailVerified) {
+                                    DropdownMenuItem(
+                                        text = { Text("Verifique sua conta") },
+                                        onClick = {
+                                            expandedLogout = false
+                                            currentUser?.sendEmailVerification()
+                                            Toast.makeText(context, "E-mail de verificação reenviado!", Toast.LENGTH_LONG).show()
+                                        }
+                                    )
+                                }
 
                                 DropdownMenuItem(
                                     text = { Text("Sair") },
@@ -193,7 +220,7 @@ fun TelaPrincipal(
                                         Toast.makeText(context, "Sessão encerrada.", Toast.LENGTH_SHORT).show()
                                         val userSharedPreferences = context.getSharedPreferences("user_prefs",Context.MODE_PRIVATE)
                                         userSharedPreferences.edit { putBoolean("is_logged", false) }
-                                        val intent = Intent(context, LoginActivity::class.java)
+                                        val intent = Intent(context, InitialPageActivity::class.java)
                                         intent.flags =
                                             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                         context.startActivity(intent)
@@ -205,13 +232,16 @@ fun TelaPrincipal(
                     actions = {
                         IconButton(
                             onClick = {
-                                currentUser?.reload()
-                                if(currentUser?.isEmailVerified == true){
-                                    mudarTela(context, QRCodeActivity::class.java)
-                                }else{
-                                    Toast.makeText(context, "É necessário verificar o e-mail para utilizar esta funcionalidade.", Toast.LENGTH_SHORT).show()
+                                currentUser?.reload()?.addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        val isVerified = currentUser.isEmailVerified
+                                        if(isVerified){
+                                            mudarTela(context, QRCodeActivity::class.java)
+                                        }else{
+                                            Toast.makeText(context, "É necessário verificar o e-mail para utilizar esta funcionalidade.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 }
-
                             }
                         ) {
                             Icon(
@@ -244,7 +274,8 @@ fun TelaPrincipal(
             paddingValues = paddingValues,
             searchQuery = searchQuery,
             shouldReload = shouldReload,
-            onReloadChange = onReloadChange
+            onReloadChange = onReloadChange,
+            isEmailVerified = isEmailVerified
         )
     }
 }
@@ -254,7 +285,8 @@ fun ScreenContent(
     paddingValues: PaddingValues,
     searchQuery: String,
     shouldReload: Boolean,
-    onReloadChange: (Boolean) -> Unit
+    onReloadChange: (Boolean) -> Unit,
+    isEmailVerified: Boolean
 ) {
     val senhas = remember { mutableStateListOf<SenhaData>() }
     val categorias = remember { mutableStateListOf<CategoriaData>() }
@@ -276,16 +308,26 @@ fun ScreenContent(
         }.toMutableStateList()
     }
 
+    // Usando LaunchedEffect para garantir a execução única durante o ciclo de vida do componente
     LaunchedEffect(currentUser, shouldReload) {
         if (currentUser != null) {
             isLoading = true
+            // Adicionando listener em tempo real para as senhas
             db.collection("accounts")
                 .document(currentUser.uid)
                 .collection("Senhas")
-                .get()
-                .addOnSuccessListener { result ->
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        isLoading = false
+                        dataLoadedSuccessfully = false
+                        Toast.makeText(context, "Erro ao carregar senhas: ${e.message}", Toast.LENGTH_SHORT).show()
+                        onReloadChange(false)
+                        return@addSnapshotListener
+                    }
+
+                    // Atualizar a lista de senhas com os dados do snapshot
                     senhas.clear()
-                    for (document in result) {
+                    snapshot?.documents?.forEach { document ->
                         val apelido = document.getString("Apelido da senha") ?: ""
                         val login = document.getString("login") ?: ""
                         val senha = document.getString("senha") ?: ""
@@ -294,29 +336,29 @@ fun ScreenContent(
                         val idSenha = document.id
                         senhas.add(SenhaData(apelido, login, senha, descricao, categoria, idSenha))
                     }
+
+                    // Atualizando a lista filtrada
                     filteredSenhas.clear()
                     filteredSenhas.addAll(senhas.filter { senha ->
                         val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
                         val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
                         matchesSearch && matchesCategory
                     })
+
+                    // Finaliza o carregamento
                     isLoading = false
                     dataLoadedSuccessfully = true
                     onReloadChange(false)
                 }
-                .addOnFailureListener { e ->
-                    isLoading = false
-                    dataLoadedSuccessfully = false
-                    Toast.makeText(context, "Erro ao carregar senhas: ${e.message}", Toast.LENGTH_SHORT).show()
-                    onReloadChange(false)
-                }
         } else {
+            // Se não houver usuário, desabilita o carregamento e a atualização
             isLoading = false
             dataLoadedSuccessfully = false
             onReloadChange(false)
         }
     }
 
+    // Listener para as categorias
     DisposableEffect(currentUser) {
         val registration: ListenerRegistration? = if (currentUser != null) {
             db.collection("accounts")
@@ -358,7 +400,6 @@ fun ScreenContent(
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -385,9 +426,9 @@ fun ScreenContent(
                             onCategorySelected = { category -> selectedCategory = category },
                             onEditCategorias = { mudarTela(context, CategoryModification::class.java) }
                         )
-                        
-                        // Modified verification reminder
-                        if (currentUser?.isEmailVerified == false && showVerificationBanner) {
+
+                        // Modificação para o banner de verificação de e-mail
+                        if (!isEmailVerified && showVerificationBanner) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -423,7 +464,7 @@ fun ScreenContent(
                                 }
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 

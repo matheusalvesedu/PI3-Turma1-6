@@ -190,7 +190,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                                 Toast
                                     .makeText(context, "Senha atualizada!", Toast.LENGTH_SHORT)
                                     .show()
-                                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
+                                 activity?.finish()
                             }
                     }
                 },

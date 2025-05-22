@@ -294,7 +294,7 @@ fun CadastroSenhaScreen() {
                             category,
                             onSuccess = {
                                 Toast.makeText(context, "Nova senha cadastrada com sucesso", Toast.LENGTH_LONG).show()
-                                mudarTelaFinish(context, PrincipalScreenActivity::class.java)
+                               activity?.finish()
                             },
                             onFailure = {
                                 Toast.makeText(context, "Erro ao cadastrar uma nova senha\nTente Novamente.", Toast.LENGTH_LONG).show()
