@@ -241,7 +241,7 @@ fun QrScannerScreen(
                     modifier = Modifier.size(100.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.fillMaxHeight(0.05f))  // 5% of screen height
 
             // Título
             Text(
@@ -253,7 +253,7 @@ fun QrScannerScreen(
                     .padding(horizontal = 20.dp)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.fillMaxHeight(0.02f))  // 2% of screen height
 
             // Visualização da câmera
             Box(
@@ -270,7 +270,7 @@ fun QrScannerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.fillMaxHeight(0.02f))  // 2% of screen height
 
             Column(
                 modifier = Modifier
@@ -283,7 +283,7 @@ fun QrScannerScreen(
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.fillMaxHeight(0.05f))  // 2% of screen height
                 Button(
                     onClick = onClose,
                     modifier = Modifier.fillMaxWidth(0.8f)
