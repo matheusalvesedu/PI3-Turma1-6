@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -189,12 +191,27 @@ fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategor
                 categorias.forEach{ item ->
                     DropdownMenuItem(
                         text = {
-                            Text(
-                                item.nome,
-                                fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 12.sp
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Divider(
+                                    modifier = Modifier
+                                        .height(16.dp)
+                                        .width(3.dp),
+                                    color = hexToColor(item.cor),
+                                    thickness = 2.dp
+                                )
+
+                                Spacer(Modifier.width(4.dp))
+
+                                Text(
+                                    text = item.nome,
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         },
                         onClick = {
                             onCategorySelected(item.nome)
