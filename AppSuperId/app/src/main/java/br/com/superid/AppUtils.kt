@@ -216,6 +216,37 @@ fun ScreenBackButton(navController: NavController,context: Context){
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SmartBackButton(navController: NavController, context: Context) {
+    val activity = context as? Activity
+    val canNavigateBack = navController.previousBackStackEntry != null
+
+    TopAppBar(
+        modifier = Modifier.height(80.dp),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            navigationIconContentColor = MaterialTheme.colorScheme.primary
+        ),
+        title = {},
+        navigationIcon = {
+            IconButton(onClick = {
+                if (canNavigateBack) {
+                    navController.popBackStack()
+                } else {
+                    activity?.finish()
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Voltar"
+                )
+            }
+        },
+    )
+}
+
 // Função de criptografia
 fun aesEncryptWithKey(data: String): String{
 

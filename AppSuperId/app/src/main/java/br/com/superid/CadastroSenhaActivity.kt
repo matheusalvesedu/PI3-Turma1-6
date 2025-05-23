@@ -3,6 +3,7 @@ package br.com.superid
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -196,13 +197,28 @@ fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategor
                             )
                         },
                         onClick = {
-
                             onCategorySelected(item.nome)
                             isExpanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                     )
                 }
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "Nova categoria",
+                            fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 12.sp
+                        )
+                    },
+                    onClick = {
+                        val intent = Intent(context, CategoryModification::class.java)
+                        intent.putExtra("startDestination", "newCategory")
+                        context.startActivity(intent)
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
             }
         }
 

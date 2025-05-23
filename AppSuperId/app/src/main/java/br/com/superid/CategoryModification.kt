@@ -68,24 +68,28 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.navigation.NavDestination
 
 
 class CategoryModification : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val startDestination = intent.getStringExtra("startDestination") ?: "categoryList"
+
         setContent {
             SuperIDTheme {
-                CategoryModFlow()
+                CategoryModFlow(startDestination)
             }
         }
     }
 }
 
 @Composable
-fun CategoryModFlow(){
+fun CategoryModFlow(startDestination: String){
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "categoryList") {
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable("categoryList") {
             CategoriesListScreen(navController)
@@ -116,17 +120,22 @@ fun adicionarCategoria(
     navController: NavController,
 ){
     val db = Firebase.firestore
+    val activity = context as? Activity
 
-    var novaCor = cor
-
-    if(novaCor == ""){
-        novaCor = "0xFFFFFFFF"
-    }
+    var novaCor = cor.ifBlank { "0xFFFFFFFF" }
 
     val novaCategoria = hashMapOf(
         "Nome" to nome,
         "Cor" to novaCor
     )
+
+    val navigateBack: () -> Unit = {
+        if (navController.previousBackStackEntry != null) {
+            navController.popBackStack()
+        } else {
+            activity?.finish()
+        }
+    }
 
     db.collection("accounts")
         .document(userId)
@@ -134,7 +143,7 @@ fun adicionarCategoria(
         .add(novaCategoria)
         .addOnSuccessListener {
             Toast.makeText(context, "Categoria adicionada com sucesso.", Toast.LENGTH_SHORT).show()
-            navController.popBackStack()
+            navigateBack()
         }
         .addOnFailureListener {
             Toast.makeText(context, "Falha ao adicionar categoria ao banco.", Toast.LENGTH_SHORT).show()
@@ -605,7 +614,7 @@ fun NewCategoryScreen(navController: NavController){
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            ScreenBackButton(navController, context)
+            SmartBackButton(navController, context)
         }
     ) { innerPadding ->
         Column(
