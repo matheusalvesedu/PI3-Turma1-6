@@ -16,6 +16,9 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -114,6 +118,7 @@ fun PasswordVerificationDialog(
     onDismiss: () -> Unit
 ) {
     var password by remember { mutableStateOf("") }
+    var isPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -133,7 +138,15 @@ fun PasswordVerificationDialog(
                     onValueChange = { password = it },
                     label = { Text("Digite sua senha") },
                     singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        val icon = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val description = if (isPasswordVisible) "Ocultar senha" else "Mostrar senha"
+
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(imageVector = icon, contentDescription = description)
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
