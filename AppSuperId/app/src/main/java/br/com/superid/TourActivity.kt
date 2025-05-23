@@ -114,6 +114,20 @@ fun TourScreen() {
 
             val pagerState = rememberPagerState(pageCount = {10})
 
+            Text(
+                text = "Tutorial do SuperID",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Text(
+                text = "Arraste para o lado para continuar.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(Modifier.height(10.dp))
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -130,13 +144,12 @@ fun TourScreen() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.SpaceAround
                     ) {
-
                         Image(
                             painter = painterResource(id = images[page]),
                             contentDescription = "Print da funcionalidade ${title[page]}",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(600.dp)
+                                .height(500.dp)
                                 .clip(RoundedCornerShape(16.dp))
                         )
 
