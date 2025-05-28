@@ -213,6 +213,13 @@ fun TelaPrincipal(
                                 }
 
                                 DropdownMenuItem(
+                                    text = { Text("Tutorial") },
+                                    onClick = {
+                                        mudarTela(context, TourActivity::class.java)
+                                    }
+                                )
+
+                                DropdownMenuItem(
                                     text = { Text("Sair") },
                                     onClick = {
                                         expandedLogout = false
