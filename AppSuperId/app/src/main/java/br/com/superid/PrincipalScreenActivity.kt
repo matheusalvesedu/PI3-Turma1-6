@@ -307,19 +307,10 @@ fun ScreenContent(
     var isLoading by remember { mutableStateOf(true) }
     var dataLoadedSuccessfully by remember { mutableStateOf(false) }
 
-    val filteredSenhas = remember(senhas, searchQuery, selectedCategory) {
-        senhas.filter { senha ->
-            val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
-            val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
-            matchesSearch && matchesCategory
-        }.toMutableStateList()
-    }
-
-    // Usando LaunchedEffect para garantir a execução única durante o ciclo de vida do componente
+    // Atualização com listener de senhas
     LaunchedEffect(currentUser, shouldReload) {
         if (currentUser != null) {
             isLoading = true
-            // Adicionando listener em tempo real para as senhas
             db.collection("accounts")
                 .document(currentUser.uid)
                 .collection("Senhas")
@@ -332,7 +323,6 @@ fun ScreenContent(
                         return@addSnapshotListener
                     }
 
-                    // Atualizar a lista de senhas com os dados do snapshot
                     senhas.clear()
                     snapshot?.documents?.forEach { document ->
                         val apelido = document.getString("Apelido da senha") ?: ""
@@ -344,34 +334,24 @@ fun ScreenContent(
                         senhas.add(SenhaData(apelido, login, senha, descricao, categoria, idSenha))
                     }
 
-                    // Atualizando a lista filtrada
-                    filteredSenhas.clear()
-                    filteredSenhas.addAll(senhas.filter { senha ->
-                        val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
-                        val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
-                        matchesSearch && matchesCategory
-                    })
-
-                    // Finaliza o carregamento
                     isLoading = false
                     dataLoadedSuccessfully = true
                     onReloadChange(false)
                 }
         } else {
-            // Se não houver usuário, desabilita o carregamento e a atualização
             isLoading = false
             dataLoadedSuccessfully = false
             onReloadChange(false)
         }
     }
 
-    // Listener para as categorias
+    // Listener para categorias
     DisposableEffect(currentUser) {
         val registration: ListenerRegistration? = if (currentUser != null) {
             db.collection("accounts")
                 .document(currentUser.uid)
                 .collection("Categorias")
-                .addSnapshotListener { snapshot, e ->
+                .addSnapshotListener { snapshot, _ ->
                     if (snapshot != null) {
                         categorias.clear()
                         for (document in snapshot.documents) {
@@ -416,6 +396,12 @@ fun ScreenContent(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             if (dataLoadedSuccessfully || senhas.isNotEmpty()) {
+                val filteredSenhas = senhas.filter { senha ->
+                    val matchesSearch = searchQuery.isBlank() || senha.apelido.contains(searchQuery, ignoreCase = true)
+                    val matchesCategory = selectedCategory == null || senha.categoria == selectedCategory
+                    matchesSearch && matchesCategory
+                }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -434,7 +420,6 @@ fun ScreenContent(
                             onEditCategorias = { mudarTela(context, CategoryModification::class.java) }
                         )
 
-                        // Modificação para o banner de verificação de e-mail
                         if (!isEmailVerified && showVerificationBanner) {
                             Box(
                                 modifier = Modifier
@@ -475,8 +460,7 @@ fun ScreenContent(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    items(filteredSenhas.size) { index ->
-                        val item = filteredSenhas[index]
+                    items(filteredSenhas) { item ->
                         CardItem(
                             apelido = item.apelido,
                             login = "Login: ${item.login}",
@@ -495,6 +479,7 @@ fun ScreenContent(
         }
     }
 }
+
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
