@@ -191,6 +191,10 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                                     .makeText(context, "Senha atualizada!", Toast.LENGTH_SHORT)
                                     .show()
                                  activity?.finish()
+                                mudarTelaFinish(
+                                    context,
+                                    PrincipalScreenActivity::class.java
+                                )
                             }
                     }
                 },

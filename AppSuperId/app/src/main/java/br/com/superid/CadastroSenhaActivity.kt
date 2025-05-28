@@ -12,7 +12,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,7 +32,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,17 +47,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.superid.ui.theme.AppColors
 import br.com.superid.ui.theme.SuperIDTheme
 import br.com.superid.ui.theme.onPrimaryContainerLight
-import br.com.superid.ui.theme.onPrimaryLight
 import br.com.superid.ui.theme.primaryContainerLight
-import br.com.superid.ui.theme.primaryLight
-import br.com.superid.ui.theme.tertiaryContainerLight
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -258,7 +251,6 @@ fun CadastroSenhaScreen() {
 
     var isLoading by remember { mutableStateOf(false) }
 
-    val maxDescriptionLength = 150
 
     val context = LocalContext.current
     val activity = LocalContext.current as? Activity
@@ -328,6 +320,10 @@ fun CadastroSenhaScreen() {
                             onSuccess = {
                                 Toast.makeText(context, "Nova senha cadastrada com sucesso", Toast.LENGTH_LONG).show()
                                activity?.finish()
+                                mudarTelaFinish(
+                                    context,
+                                    PrincipalScreenActivity::class.java
+                                )
                             },
                             onFailure = {
                                 Toast.makeText(context, "Erro ao cadastrar uma nova senha\nTente Novamente.", Toast.LENGTH_LONG).show()
