@@ -32,8 +32,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import br.com.superid.R
 import android.annotation.SuppressLint
-
-
+import kotlinx.coroutines.delay
 
 
 // Função para transicionar entre as telas
@@ -196,7 +195,17 @@ fun activityBackButton(activity: Activity?){
 // Botão para voltar telas dentro de uma única activity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenBackButton(navController: NavController,context: Context){
+fun ScreenBackButton(navController: NavController, context: Context) {
+    var isNavigating by remember { mutableStateOf(false) }
+
+    // Quando isNavigating virar true, esperamos 500ms para resetar
+    if (isNavigating) {
+        LaunchedEffect(Unit) {
+            delay(500)
+            isNavigating = false
+        }
+    }
+
     TopAppBar(
         modifier = Modifier.height(80.dp),
         colors = TopAppBarDefaults.topAppBarColors(
@@ -206,13 +215,20 @@ fun ScreenBackButton(navController: NavController,context: Context){
         ),
         title = {},
         navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(
+                onClick = {
+                    if (!isNavigating) {
+                        isNavigating = true
+                        navController.popBackStack()
+                    }
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Voltar"
                 )
             }
-        },
+        }
     )
 }
 
@@ -350,5 +366,6 @@ object PoppinsFonts {
     val medium = poppinsMedium
     val bold = poppinsBold
 }
+
 
 

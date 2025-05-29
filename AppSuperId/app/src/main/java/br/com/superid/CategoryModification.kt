@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
@@ -69,6 +70,7 @@ import com.google.firebase.ktx.Firebase
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavDestination
+import kotlinx.coroutines.delay
 
 
 class CategoryModification : ComponentActivity() {
@@ -121,6 +123,7 @@ fun adicionarCategoria(
 ){
     val db = Firebase.firestore
     val activity = context as? Activity
+    var navegate = false
 
     var novaCor = cor.ifBlank { "0xFFFFFFFF" }
 
@@ -130,10 +133,13 @@ fun adicionarCategoria(
     )
 
     val navigateBack: () -> Unit = {
-        if (navController.previousBackStackEntry != null) {
-            navController.popBackStack()
-        } else {
-            activity?.finish()
+        if (!navegate) {
+            navegate = true
+            if (navController.previousBackStackEntry != null) {
+                navController.popBackStack()
+            } else {
+                activity?.finish()
+            }
         }
     }
 
@@ -159,10 +165,25 @@ fun alterarCategoria(userId: String,
                      navController: NavController,
                      onSuccess: () -> Unit = {},
                      onFailure: () -> Unit = {}
+
 ) {
     val db = Firebase.firestore
     val atualizacoesCategoria = mutableMapOf<String, Any>()
     var nomeAntigo: String? = null
+    var navegate = false
+    val activity = context as? Activity
+
+    val navigateBack: () -> Unit = {
+        if (!navegate) {
+            navegate = true
+            if (navController.previousBackStackEntry != null) {
+                navController.popBackStack()
+            } else {
+                activity?.finish()
+            }
+        }
+    }
+
 
     db.collection("accounts")
         .document(userId)
@@ -206,7 +227,7 @@ fun alterarCategoria(userId: String,
                                                 "Categoria atualizada.",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            navController.popBackStack()
+                                            navigateBack()
                                             onSuccess()
                                         }
                                         .addOnFailureListener { e ->
@@ -239,7 +260,7 @@ fun alterarCategoria(userId: String,
                         } else {
                             Toast.makeText(context, "Categoria atualizada.", Toast.LENGTH_SHORT)
                                 .show()
-                            navController.popBackStack()
+                            navigateBack()
                             onSuccess()
                         }
                     }
@@ -507,7 +528,10 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
     val novaCorState = savedStateHandle?.getStateFlow("novaCor", "")
     val novaCor by novaCorState?.collectAsState() ?: remember { mutableStateOf("") }
 
+    var isNavigating = false
+
     val db = Firebase.firestore
+
 
     LaunchedEffect(idDaCategoria) {
         db.collection("accounts")
@@ -522,6 +546,13 @@ fun EditCategoryScreen(navController: NavController, idDaCategoria: String){
             .addOnFailureListener {
                 Toast.makeText(context, "Erro ao carregar categoria.", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    if (isNavigating) {
+        LaunchedEffect(Unit) {
+            delay(500)
+            isNavigating = false
+        }
     }
 
     Scaffold(
