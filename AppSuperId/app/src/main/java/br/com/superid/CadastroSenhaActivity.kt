@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,24 +34,32 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffectScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.superid.ui.theme.SuperIDTheme
 import br.com.superid.ui.theme.onPrimaryContainerLight
 import br.com.superid.ui.theme.primaryContainerLight
@@ -134,14 +144,30 @@ fun savePasswordToDb(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategorySelected: (String) -> Unit){
-
     var isExpanded by remember { mutableStateOf(false) }
-
     var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         getCategorias(user.uid, context) { result ->
             categorias = result
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                getCategorias(user.uid, context) { result ->
+                    categorias = result
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -219,13 +245,22 @@ fun DropDown(user: FirebaseUser,context: Context,selectedText: String, onCategor
                             "Nova categoria",
                             fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            modifier = Modifier.weight(0.9f)
                         )
+
                     },
                     onClick = {
                         val intent = Intent(context, CategoryModification::class.java)
                         intent.putExtra("startDestination", "newCategory")
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Adicionar",
+                            modifier = Modifier.size(12.dp)
+                        )
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
