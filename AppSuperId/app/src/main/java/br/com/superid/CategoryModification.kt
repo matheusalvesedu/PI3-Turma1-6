@@ -670,7 +670,10 @@ fun NewCategoryScreen(navController: NavController){
             Spacer(modifier = Modifier.height(120.dp))
 
             Button(
-                onClick = { adicionarCategoria(uid, nome, novaCor, context, navController) },
+                onClick = {
+                    if (nome.isNotBlank()) adicionarCategoria(uid, nome, novaCor, context, navController)
+                    else Toast.makeText(context, "Nome faltante.", Toast.LENGTH_SHORT).show()
+                },
                 modifier = Modifier
                     .width(300.dp)
                     .height(60.dp)
