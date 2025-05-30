@@ -21,62 +21,90 @@
             --error-color: #dc3545;
             --success-color: #198754;
             --warning-color: #ffc107;
+            --font-primary: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         body {
             min-height: 100vh;
-            background-color: var(--dark-navy);
+            background:   var(--dark-navy) ;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: var(--font-primary);
+            margin: 0;
+            padding: 0;
+            color: var(--dark-gray);
+            height: 100vh;
+            overflow: hidden;
         }
 
         .container {
-            max-width: 480px;
             width: 100%;
-            padding: 20px;
+            max-width: 400px;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .qr-card {
             background: var(--white);
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            width: 100%;
+            max-width: 360px;
         }
+
+       
 
         .card-header {
             background: var(--dark-gray);
-            padding: 1.5rem;
+            padding: 0.75rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gold);
         }
 
         .card-header h1 {
             color: var(--white);
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin: 0;
             font-weight: 600;
+            letter-spacing: -0.5px;
         }
 
         .qr-container {
-            padding: 2rem;
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1.5rem;
+            gap: 0.875rem;
+            width: 100%;
         }
 
         .qr-frame {
             background: var(--white);
-            padding: 1rem;
+            padding: 0.75rem;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
             position: relative;
-            width: 280px;
-            height: 280px;
+            width: 100%;
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 2px solid var(--light-gray);
         }
 
         .qr-frame img {
@@ -88,60 +116,145 @@
             border-radius: 8px;
         }
 
-        #qrcode {
+        .timer-section {
             width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin-bottom: 1rem;
+            position: relative;
+            padding-top: 2rem;
         }
 
         .timer-container {
-            background: var(--dark-gray);
-            color: var(--white);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
+            color: var(--dark-gray);
             font-weight: 500;
-            min-width: 180px;
-            text-align: center;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 0;
+            white-space: nowrap;
+        }
+
+        .progress {
+            width: 100%;
+            height: 4px;
+            background-color: var(--light-gray);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: var(--gold);
+            height: 100%;
+            border-radius: 100px;
         }
 
         .status-message {
             width: 100%;
-            padding: 1rem;
-            border-radius: 8px;
+            padding: 0.625rem 0.75rem;
+            border-radius: 10px;
             font-weight: 500;
             display: none;
-            animation: fadeIn 0.3s ease;
+            margin: 0;
+            font-size: 0.875rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
+        .camera-instruction {
+            color: var(--dark-gray);
+            font-size: 0.875rem;
+            text-align: center;
+            margin: 0 0 2rem 0;
             font-weight: 500;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        .btn-primary {
-            background-color: var(--gold);
-            border-color: var(--gold);
-            color: var(--white);
+        .help-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: var(--dark-gray);
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            border-radius: 50%;
+            background-color: var(--light-gray);
         }
 
-        .btn-primary:hover {
-            background-color: #b18d33;
-            border-color: #b18d33;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
 
-        .btn-secondary {
-            background-color: var(--dark-gray);
-            border-color: var(--dark-gray);
-            color: var(--white);
+        .modal-content {
+            background-color: var(--white);
+            padding: 1.5rem;
+            border-radius: 16px;
+            max-width: 320px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-secondary:hover {
-            background-color: var(--dark-navy);
-            border-color: var(--dark-navy);
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark-gray);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--dark-gray);
+            padding: 0.25rem;
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .instructions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+        }
+
+        .instructions-list li::before {
+            content: "•";
+            color: var(--gold);
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 0.25rem;
         }
 
         .btn-container {
@@ -151,24 +264,102 @@
             width: 100%;
         }
 
-        #generateAgain {
-            display: none;
-            margin-bottom: 1rem;
+        .btn {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-weight: 600;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .btn-primary {
+            background-color: var(--gold);
+            color: var(--white);
         }
+
+        .btn-primary:hover {
+            background-color: #d4ac3f;
+        }
+
+        .btn-secondary {
+            background: var(--dark-gray);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background: #2a3749;
+        }
+
+        #generateAgain {
+            display: none;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert {
+            border: none;
+        }
+
+        .alert-info {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+    
 
         @media (max-width: 480px) {
             .container {
-                padding: 10px;
+                padding: 1rem;
             }
             
-            .qr-frame {
-                width: 240px;
-                height: 240px;
+            .qr-container {
+                padding: 1.5rem;
+            }
+
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                padding: 0.875rem 1.25rem;
+                font-size: 1rem;
+            }
+
+            .camera-instruction {
+                margin-bottom: 1.5rem;
+            }
+
+            .timer-section {
+                padding-top: 1.5rem;
             }
         }
     </style>
@@ -185,8 +376,32 @@
                     <div id="qrcode"></div>
                 </div>
                 
-                <div class="timer-container" id="timer">
-                    Tempo restante: 60s
+                <p class="camera-instruction">
+                    Aponte a câmera utilizando o app Super ID
+                    <button class="help-btn" id="helpBtn">?</button>
+                </p>
+
+                <div class="modal" id="helpModal">
+                    <div class="modal-content">
+                        <button class="modal-close" id="closeModal">&times;</button>
+                        <h3 class="modal-title">Como fazer login com Super ID</h3>
+                        <ul class="instructions-list">
+                            <li>Abra o aplicativo Super ID no seu celular</li>
+                            <li>Na tela inicial, toque no ícone de QR Code</li>
+                            <li>Aponte a câmera para o QR Code exibido na tela</li>
+                            <li>Aguarde a confirmação do login</li>
+                            <li>Pronto! Você será redirecionado automaticamente</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="timer-section">
+                    <div class="timer-container" id="timer">
+                        Tempo Restante: 60s
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 100%" id="timerProgress"></div>
+                    </div>
                 </div>
 
                 <div id="statusMessage" class="status-message">
@@ -244,6 +459,7 @@
 
         const qrCodeContainer = document.getElementById('qrcode');
         const timerElement = document.getElementById('timer');
+        const timerProgressBar = document.getElementById('timerProgress');
         const generateAgainButton = document.getElementById('generateAgain');
         const statusMessage = document.getElementById('statusMessage');
         const backToLoginButton = document.getElementById('backToLogin');
@@ -254,34 +470,23 @@
 
         async function checkLoginStatus(loginToken) {
             try {
-                console.log("Checking login status for token:", loginToken);
-                
-                // First try to get status from Firestore
                 const loginDoc = await db.collection('login')
                     .where('loginToken', '==', loginToken)
                     .where('apiKey', '==', apiKey)
                     .limit(1)
                     .get();
 
-                console.log("Query result:", !loginDoc.empty ? "Document found" : "No document found");
-
                 if (!loginDoc.empty) {
                     const loginData = loginDoc.docs[0].data();
-                    console.log("Login data:", loginData);
                     
                     // Check if login is completed (has loginAt timestamp)
                     if (loginData.loginAt) {
-                        console.log("Login completed, redirecting...");
                         clearInterval(loginCheckInterval);
                         clearInterval(countdown);
                         
-                        // Store the user ID and show success message
                         localStorage.setItem('userId', loginData.user);
-                        statusMessage.className = 'status-message alert alert-success';
-                        statusMessage.textContent = 'Autenticação bem-sucedida! Redirecionando...';
-                        statusMessage.style.display = 'block';
+                        updateStatusMessage('success', 'Autenticação bem-sucedida! Redirecionando...');
                         
-                        // Redirect after a short delay
                         setTimeout(() => {
                             window.location.href = 'home.html';
                         }, 1500);
@@ -292,37 +497,36 @@
                     const createdAt = loginData.createdAt.toDate();
                     const now = new Date();
                     const diffInSeconds = (now - createdAt) / 1000;
-                    console.log("Time difference in seconds:", diffInSeconds);
                     
                     if (diffInSeconds > 60) {
-                        console.log("Token expired");
-                        clearInterval(loginCheckInterval);
-                        statusMessage.className = 'status-message alert alert-warning';
-                        statusMessage.textContent = 'Token expirado. Por favor, gere um novo QR Code.';
-                        statusMessage.style.display = 'block';
-                        generateAgainButton.style.display = 'block';
+                        handleExpiration();
                         return;
                     }
                 }
 
-                // If no document found or not authenticated yet, continue checking
-                statusMessage.className = 'status-message alert alert-info';
-                statusMessage.textContent = 'Aguardando autenticação...';
-                statusMessage.style.display = 'block';
+                // Only update the waiting message if we're not in an error state
+                if (!statusMessage.classList.contains('alert-danger') && 
+                    !statusMessage.classList.contains('alert-warning')) {
+                    updateStatusMessage('info', 'Aguardando autenticação...');
+                }
 
             } catch (error) {
                 console.error('Erro ao verificar status:', error);
-                statusMessage.className = 'status-message alert alert-danger';
-                statusMessage.textContent = 'Erro ao verificar status do login';
-                statusMessage.style.display = 'block';
+                updateStatusMessage('danger', 'Erro ao verificar status do login');
             }
         }
 
         async function getQRCode() {
             try {
-                statusMessage.className = 'status-message alert alert-info';
-                statusMessage.textContent = 'Gerando QR Code...';
-                statusMessage.style.display = 'block';
+                // Clear existing intervals first
+                clearIntervals();
+                
+                // Reset timer display
+                timerElement.textContent = 'Tempo Restante: 60s';
+                timerProgressBar.style.width = '100%';
+                
+                // Immediately show generating message
+                updateStatusMessage('info', 'Gerando QR Code...');
                 generateAgainButton.style.display = 'none';
 
                 const response = await fetch(apiUrl, {
@@ -345,19 +549,27 @@
                     img.style.height = '100%';
                     img.style.objectFit = 'contain';
 
-                    qrCodeContainer.innerHTML = ""; 
-                    qrCodeContainer.appendChild(img);
+                    // Update status as soon as we have the QR code
+                    img.onload = () => {
+                        qrCodeContainer.innerHTML = "";
+                        qrCodeContainer.appendChild(img);
+                        updateStatusMessage('info', 'Aguardando autenticação...');
+                    };
 
                     localStorage.setItem("loginToken", data.loginToken);
                     
-                    // Start checking login status
+                    // Start checking login status immediately
                     if (loginCheckInterval) {
                         clearInterval(loginCheckInterval);
                     }
                     loginCheckInterval = setInterval(() => {
                         checkLoginStatus(data.loginToken);
-                    }, 2000);
+                    }, 1000); // Reduced from 2000ms to 1000ms for more responsive checks
 
+                    // Reset and start the countdown
+                    if (countdown) {
+                        clearInterval(countdown);
+                    }
                     startCountdown();
                 } else {
                     throw new Error(data.error || "Erro ao gerar QR Code");
@@ -365,33 +577,28 @@
 
             } catch (err) {
                 console.error("Erro na requisição:", err);
-                statusMessage.className = 'status-message alert alert-danger';
-                statusMessage.textContent = 'Erro ao gerar QR Code. Tente novamente.';
-                statusMessage.style.display = 'block';
+                updateStatusMessage('danger', 'Erro ao gerar QR Code. Tente novamente.');
                 generateAgainButton.style.display = 'block';
             }
         }
 
         function startCountdown(resumeTime = null) {
             let timeLeft;
+            const TOTAL_TIME = 60;
+            
             if (resumeTime) {
                 timeLeft = Math.max(0, Math.ceil((resumeTime - Date.now()) / 1000));
             } else {
-                timeLeft = 60;
+                timeLeft = TOTAL_TIME;
                 timerEndTime = Date.now() + (timeLeft * 1000);
             }
 
             if (timeLeft <= 0) {
-                clearInterval(countdown);
-                clearInterval(loginCheckInterval);
-                statusMessage.className = 'status-message alert alert-warning';
-                statusMessage.textContent = 'QR Code expirado. Por favor, gere um novo.';
-                statusMessage.style.display = 'block';
-                generateAgainButton.style.display = 'block';
+                handleExpiration();
                 return;
             }
 
-            timerElement.textContent = `Tempo restante: ${timeLeft}s`;
+            updateTimerDisplay(timeLeft, TOTAL_TIME);
 
             if (countdown) {
                 clearInterval(countdown);
@@ -399,17 +606,35 @@
 
             countdown = setInterval(() => {
                 timeLeft--;
-                timerElement.textContent = `Tempo restante: ${timeLeft}s`;
+                updateTimerDisplay(timeLeft, TOTAL_TIME);
 
                 if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    clearInterval(loginCheckInterval);
-                    statusMessage.className = 'status-message alert alert-warning';
-                    statusMessage.textContent = 'QR Code expirado. Por favor, gere um novo.';
-                    statusMessage.style.display = 'block';
-                    generateAgainButton.style.display = 'block';
+                    handleExpiration();
                 }
             }, 1000);
+        }
+
+        function updateTimerDisplay(timeLeft, totalTime) {
+            const progressPercentage = (timeLeft / totalTime) * 100;
+            timerElement.textContent = `Tempo Restante: ${timeLeft}s`;
+            timerProgressBar.style.width = `${progressPercentage}%`;
+        }
+
+        function handleExpiration() {
+            clearInterval(countdown);
+            clearInterval(loginCheckInterval);
+            timerElement.textContent = 'Tempo expirado';
+            timerProgressBar.style.width = '0%';
+            
+            // Immediately update status message
+            updateStatusMessage('warning', 'QR Code expirado. Por favor, gere um novo.');
+            generateAgainButton.style.display = 'block';
+        }
+
+        function updateStatusMessage(type, message) {
+            statusMessage.className = `status-message alert alert-${type}`;
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
         }
 
         function clearIntervals() {
@@ -452,6 +677,25 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             getQRCode();
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('helpModal');
+        const helpBtn = document.getElementById('helpBtn');
+        const closeModal = document.getElementById('closeModal');
+
+        helpBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
         });
     </script>
 </body>
