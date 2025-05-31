@@ -347,8 +347,11 @@ fun CategoriesListScreen(navController: NavController) {
 
     var categoriaParaExcluir by remember { mutableStateOf<Categoria?>(null) }
     var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
+    
+    // Add currentBackStackEntry to force recomposition when navigating back
+    val currentBackStackEntry = navController.currentBackStackEntry
 
-    LaunchedEffect(uid) {
+    LaunchedEffect(uid, currentBackStackEntry) {
         getCategorias(uid, context) { resultado ->
             categorias = resultado
         }
