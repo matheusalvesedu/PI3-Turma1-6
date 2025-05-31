@@ -420,42 +420,14 @@
         </div>
     </div>
 
-    <!-- Firebase App (the core Firebase SDK) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <!-- Firebase Auth -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <!-- Firebase Firestore -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootst rap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
         const apiUrl = "https://performauth-cbyds7tnfq-uc.a.run.app://127.0.0.1:5001/superid-a21e7/us-central1/performAuth";
         const statusUrl = "https://getloginstatus-cbyds7tnfq-uc.a.run.app://127.0.0.1:5001/superid-a21e7/us-central1/getLoginStatus";
         const url = "www.teste.com";
         const apiKey = "YWhka2prYWprc2hkZmhrZHNqZmtqZGZobGtqZGg";
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyC56GLT5GXLfha1pdUMpPsd1-Biq0uEXyM",
-            authDomain: "superid-a21e7.firebaseapp.com",
-            projectId: "superid-a21e7",
-            storageBucket: "superid-a21e7.firebasestorage.app",
-            messagingSenderId: "88116529280",
-            appId: "1:88116529280:web:163cb1a4d8ee4247da3e65",
-            measurementId: "G-7P5GF4DRV1"
-        };
-
-        let db;
-
-        // Initialize Firebase
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            console.log("Firebase initialized successfully");
-        } catch (error) {
-            console.error("Error initializing Firebase:", error);
-        }
 
         const qrCodeContainer = document.getElementById('qrcode');
         const timerElement = document.getElementById('timer');
@@ -467,47 +439,77 @@
         let countdown;
         let loginCheckInterval;
         let timerEndTime;
+        let qrCodeGenerationAttempts = parseInt(localStorage.getItem('qrCodeAttempts') || '0');
+        const MAX_QR_GENERATION_ATTEMPTS = 3;
+
+        // Function to update attempts count
+        function updateAttempts(count) {
+            qrCodeGenerationAttempts = count;
+            localStorage.setItem('qrCodeAttempts', count.toString());
+        }
+
+        // Function to check if attempts should be reset (after 5 minutes)
+        function checkAttemptsReset() {
+            const lastAttemptTime = localStorage.getItem('lastAttemptTime');
+            if (lastAttemptTime) {
+                const now = new Date().getTime();
+                const last = parseInt(lastAttemptTime);
+                const minutesPassed = (now - last) / (1000 * 60);
+                
+                if (minutesPassed >= 5) {
+                    updateAttempts(0);
+                    localStorage.removeItem('lastAttemptTime');
+                    return true;
+                } else {
+                    const minutesLeft = Math.ceil(5 - minutesPassed);
+                    return minutesLeft;
+                }
+            }
+            return true;
+        }
 
         async function checkLoginStatus(loginToken) {
             try {
-                const loginDoc = await db.collection('login')
-                    .where('loginToken', '==', loginToken)
-                    .where('apiKey', '==', apiKey)
-                    .limit(1)
-                    .get();
+                const response = await fetch(statusUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        loginToken
+                    })
+                });
 
-                if (!loginDoc.empty) {
-                    const loginData = loginDoc.docs[0].data();
-                    
-                    // Check if login is completed (has loginAt timestamp)
-                    if (loginData.loginAt) {
-                        clearInterval(loginCheckInterval);
-                        clearInterval(countdown);
-                        
-                        localStorage.setItem('userId', loginData.user);
-                        updateStatusMessage('success', 'Autenticação bem-sucedida! Redirecionando...');
-                        
-                        setTimeout(() => {
-                            window.location.href = 'home.html';
-                        }, 1500);
-                        return;
-                    }
+                const data = await response.json();
 
-                    // Check if token is expired based on createdAt
-                    const createdAt = loginData.createdAt.toDate();
-                    const now = new Date();
-                    const diffInSeconds = (now - createdAt) / 1000;
-                    
-                    if (diffInSeconds > 60) {
-                        handleExpiration();
-                        return;
-                    }
+                if (response.status === 410) {
+                    handleExpiration();
+                    return;
                 }
 
-                // Only update the waiting message if we're not in an error state
-                if (!statusMessage.classList.contains('alert-danger') && 
-                    !statusMessage.classList.contains('alert-warning')) {
-                    updateStatusMessage('info', 'Aguardando autenticação...');
+                if (!response.ok) {
+                    throw new Error(data.error || "Erro ao verificar status");
+                }
+
+                if (data.status === 'authenticated') {
+                    clearInterval(loginCheckInterval);
+                    clearInterval(countdown);
+                    
+                    localStorage.setItem('userId', data.uid);
+                    updateStatusMessage('success', 'Autenticação bem-sucedida! Redirecionando...');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 1500);
+                    return;
+                }
+
+                if (data.status === 'pending') {
+                    // Only update the waiting message if we're not in an error state
+                    if (!statusMessage.classList.contains('alert-danger') && 
+                        !statusMessage.classList.contains('alert-warning')) {
+                        updateStatusMessage('info', 'Aguardando autenticação...');
+                    }
                 }
 
             } catch (error) {
@@ -518,6 +520,34 @@
 
         async function getQRCode() {
             try {
+                const resetResult = checkAttemptsReset();
+                
+                // Se resetResult for um número, significa que ainda precisa esperar
+                if (typeof resetResult === 'number') {
+                    const minuteText = resetResult === 1 ? 'minuto' : 'minutos';
+                    updateStatusMessage('warning', `Aguarde ${resetResult} ${minuteText} para tentar novamente.`);
+                    generateAgainButton.style.display = 'none';
+                    return;
+                }
+
+                // Check if we've exceeded the maximum attempts
+                if (qrCodeGenerationAttempts >= MAX_QR_GENERATION_ATTEMPTS) {
+                    const resetResult = checkAttemptsReset();
+                    if (typeof resetResult === 'number') {
+                        const minuteText = resetResult === 1 ? 'minuto' : 'minutos';
+                        updateStatusMessage('warning', `Limite de tentativas atingido. Aguarde ${resetResult} ${minuteText} para tentar novamente.`);
+                    } else {
+                        updateStatusMessage('warning', 'Número máximo de tentativas atingido. Por favor, volte ao login.');
+                    }
+                    generateAgainButton.style.display = 'none';
+                    return;
+                }
+
+                updateAttempts(qrCodeGenerationAttempts + 1);
+                localStorage.setItem('lastAttemptTime', new Date().getTime().toString());
+                
+                const attemptsLeft = MAX_QR_GENERATION_ATTEMPTS - qrCodeGenerationAttempts;
+                
                 // Clear existing intervals first
                 clearIntervals();
                 
@@ -526,7 +556,7 @@
                 timerProgressBar.style.width = '100%';
                 
                 // Immediately show generating message
-                updateStatusMessage('info', 'Gerando QR Code...');
+                updateStatusMessage('info', `Gerando QR Code... (${attemptsLeft} tentativas restantes)`);
                 generateAgainButton.style.display = 'none';
 
                 const response = await fetch(apiUrl, {
@@ -564,13 +594,18 @@
                     }
                     loginCheckInterval = setInterval(() => {
                         checkLoginStatus(data.loginToken);
-                    }, 1000); // Reduced from 2000ms to 1000ms for more responsive checks
+                    }, 2000);
 
                     // Reset and start the countdown
                     if (countdown) {
                         clearInterval(countdown);
                     }
                     startCountdown();
+
+                    // Show generate again button only if we haven't reached max attempts
+                    if (qrCodeGenerationAttempts < MAX_QR_GENERATION_ATTEMPTS) {
+                        generateAgainButton.style.display = 'none';
+                    }
                 } else {
                     throw new Error(data.error || "Erro ao gerar QR Code");
                 }
@@ -578,7 +613,9 @@
             } catch (err) {
                 console.error("Erro na requisição:", err);
                 updateStatusMessage('danger', 'Erro ao gerar QR Code. Tente novamente.');
-                generateAgainButton.style.display = 'block';
+                if (qrCodeGenerationAttempts < MAX_QR_GENERATION_ATTEMPTS) {
+                    generateAgainButton.style.display = 'block';
+                }
             }
         }
 
@@ -626,9 +663,13 @@
             timerElement.textContent = 'Tempo expirado';
             timerProgressBar.style.width = '0%';
             
-            // Immediately update status message
-            updateStatusMessage('warning', 'QR Code expirado. Por favor, gere um novo.');
-            generateAgainButton.style.display = 'block';
+            if (qrCodeGenerationAttempts < MAX_QR_GENERATION_ATTEMPTS) {
+                updateStatusMessage('warning', 'QR Code expirado. Por favor, gere um novo.');
+                generateAgainButton.style.display = 'block';
+            } else {
+                updateStatusMessage('warning', 'Número máximo de tentativas atingido. Por favor, volte ao login.');
+                generateAgainButton.style.display = 'none';
+            }
         }
 
         function updateStatusMessage(type, message) {
