@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 
     id("com.google.gms.google-services")
+
 }
 
 android {
@@ -12,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "br.com.superid"
-        minSdk = 33
+        minSdk = 30
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -58,6 +59,15 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation("androidx.media3:media3-common-ktx:1.6.1")
+    implementation("com.google.android.material:material:1.12.0")
+
+    implementation("androidx.media3:media3-common-ktx:1.7.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -77,6 +87,8 @@ dependencies {
 
     // libs do Auth
     implementation("com.google.firebase:firebase-auth-ktx:23.2.0")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // libs do Navigation
     implementation(libs.androidx.navigation.compose)
@@ -87,5 +99,25 @@ dependencies {
 
     // libs do .env
     implementation(libs.dotenv.kotlin)
+
+    // libs do Google Fonts
+    implementation(libs.androidx.ui.text.google.fonts)
+    
+    // libs do Color Picker
+    implementation(libs.colorpicker.compose)
+
+    // Permissions
+    implementation(libs.accompanistPermissions)
+
+    // CameraX dependencies for camera integration
+    implementation(libs.androidx.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.androidx.camera.extensions)
+
+    // ML Kit Barcode Scanning
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.camera.mlkit.vision)
 
 }

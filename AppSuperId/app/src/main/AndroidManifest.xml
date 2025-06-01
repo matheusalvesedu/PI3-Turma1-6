@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.camera.any" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,16 +17,56 @@
         android:theme="@style/Theme.SuperID"
         tools:targetApi="31">
         <activity
+            android:name=".TourActivity"
+            android:exported="false"
+            android:label="@string/title_activity_tour"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".QRCodeActivity"
+            android:exported="false"
+            android:label="@string/title_activity_qrcode"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".CategoryModification"
+            android:exported="false"
+            android:label="@string/title_activity_category_modification"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".ChangeOrDeleteActivity"
+            android:exported="false"
+            android:label="@string/title_activity_change_or_delete"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".ChangePassword"
+            android:exported="false"
+            android:label="@string/title_activity_change_password"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".CadastroSenhaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_cadastro_senha"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".PrincipalScreenActivity"
+            android:exported="false"
+            android:label="@string/title_activity_principal_screen"
+            android:theme="@style/Theme.SuperID" />
+        <activity
+            android:name=".PasswordRecoveryActivity"
+            android:exported="false"
+            android:label="@string/title_activity_change_password"
+            android:theme="@style/Theme.SuperID" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.SuperID" />
         <activity
             android:name=".SignUpActivity"
-            android:windowSoftInputMode="adjustResize"
             android:exported="false"
             android:label="@string/title_activity_sign_up"
-            android:theme="@style/Theme.SuperID" />
+            android:theme="@style/Theme.SuperID"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".InitialPageActivity"
             android:exported="true"

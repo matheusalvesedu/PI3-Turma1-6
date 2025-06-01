@@ -15,4 +15,4 @@
 local.properties
 
 /app/secrets.properties
-.env
+CryptoKey.kt
