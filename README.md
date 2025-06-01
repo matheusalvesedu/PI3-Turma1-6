@@ -20,8 +20,7 @@ O sistema é dividido em duas partes principais:
 
 ## Status do Projeto
 
-> Em desenvolvimento  
-> Ainda não há uma versão de release disponível (APK). Quando for criada, será incluída aqui para testes.
+> Finalizado
 
 ---
 
