@@ -110,7 +110,7 @@ fun savePasswordToDb(
         newCategory = "Sem Categoria"
     }
 
-    val encryptedPassword = aesEncryptWithKey(password)
+    val encryptedPassword = encrypt(password)
     val accessToken = generateAccessToken()
 
     val passwordData = hashMapOf(

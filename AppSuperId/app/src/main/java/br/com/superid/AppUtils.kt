@@ -25,13 +25,17 @@ import androidx.navigation.NavController
 import br.com.superid.ui.theme.AppColors
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import java.util.Base64
+import android.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import br.com.superid.R
 import android.annotation.SuppressLint
+import android.util.Log
+import java.security.KeyStore
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 
 
 
@@ -247,33 +251,88 @@ fun SmartBackButton(navController: NavController, context: Context) {
     )
 }
 
-// Função de criptografia
-fun aesEncryptWithKey(data: String): String{
+// Alias da chave, deve ser o mesmo usado na geração
+private const val KEY_ALIAS = "br.com.superid.chave-mestra"
+// Provedor do KeyStore
+private const val ANDROID_KEYSTORE = "AndroidKeyStore"
+// Algoritmo de transformação. AES/GCM é o padrão moderno e seguro.
+private const val TRANSFORMATION = "AES/GCM/NoPadding"
+// Tamanho do Vetor de Inicialização (IV) em bytes. 12 bytes é o padrão para GCM.
+private const val IV_SIZE_BYTES = 12
 
-    val key = SecretKeySpec(CryptoKey.getKey(), "AES")
-
-    val cipher = Cipher.getInstance("AES")
-
-    cipher.init(Cipher.ENCRYPT_MODE, key)
-    val dataCripted = cipher.doFinal(data.toByteArray())
-
-    return Base64.getEncoder().encodeToString(dataCripted)
-
+private fun getSecretKey(): SecretKey? {
+    return try {
+        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
+        keyStore.load(null)
+        keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+    } catch (e: Exception) {
+        Log.e("Crypto", "Erro ao carregar a chave do KeyStore", e)
+        null
+    }
 }
 
-// Função de descriptografia
-fun aesDecryptWithKey(encryptedData: String): String{
+fun encrypt(data: String): String? {
+    try {
+        // 1. Carrega a chave secreta do AndroidKeyStore.
+        val secretKey = getSecretKey() ?: throw Exception("Chave secreta não encontrada no KeyStore.")
 
-    val dataBaseByteArray = Base64.getDecoder().decode(encryptedData)
+        // 2. Obtém uma instância do Cipher com a transformação correta.
+        val cipher = Cipher.getInstance(TRANSFORMATION)
 
-    val key = SecretKeySpec(CryptoKey.getKey(), "AES")
+        // 3. Inicializa o Cipher em modo de criptografia.
+        //    Para GCM, o IV é gerado de forma segura pelo próprio Cipher.
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
 
-    val cipher = Cipher.getInstance("AES")
+        // 4. Obtém o IV gerado, que precisaremos para a descriptografia.
+        val iv = cipher.iv
 
-    cipher.init(Cipher.DECRYPT_MODE,key)
-    val dataDecrypted = cipher.doFinal(dataBaseByteArray)
+        // 5. Criptografa os dados.
+        val encryptedDataBytes = cipher.doFinal(data.toByteArray(Charsets.UTF_8))
 
-    return String(dataDecrypted)
+        // 6. Combina o IV com os dados criptografados (IV primeiro).
+        val combinedData = ByteArray(IV_SIZE_BYTES + encryptedDataBytes.size)
+        System.arraycopy(iv, 0, combinedData, 0, IV_SIZE_BYTES)
+        System.arraycopy(encryptedDataBytes, 0, combinedData, IV_SIZE_BYTES, encryptedDataBytes.size)
+
+        // 7. Codifica o resultado em Base64 e retorna.
+        return Base64.encodeToString(combinedData, Base64.DEFAULT)
+
+    } catch (e: Exception) {
+        Log.e("Crypto", "Erro ao criptografar os dados", e)
+        return null
+    }
+}
+
+fun decrypt(encryptedDataB64: String): String? {
+    try {
+        // 1. Decodifica os dados de Base64.
+        val combinedData = Base64.decode(encryptedDataB64, Base64.DEFAULT)
+        if (combinedData.size < IV_SIZE_BYTES) {
+            throw IllegalArgumentException("Dados criptografados inválidos.")
+        }
+
+        // 2. Carrega a chave secreta do AndroidKeyStore.
+        val secretKey = getSecretKey() ?: throw Exception("Chave secreta não encontrada no KeyStore.")
+
+        // 3. Separa o IV dos dados criptografados.
+        val iv = combinedData.copyOfRange(0, IV_SIZE_BYTES)
+        val encryptedDataBytes = combinedData.copyOfRange(IV_SIZE_BYTES, combinedData.size)
+
+        // 4. Cria a especificação dos parâmetros GCM usando o IV extraído.
+        val gcmParameterSpec = GCMParameterSpec(128, iv)
+
+        // 5. Obtém uma instância do Cipher e o inicializa em modo de descriptografia.
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec)
+
+        // 6. Descriptografa os dados e retorna como String.
+        val decryptedDataBytes = cipher.doFinal(encryptedDataBytes)
+        return String(decryptedDataBytes, Charsets.UTF_8)
+
+    } catch (e: Exception) {
+        Log.e("Crypto", "Erro ao descriptografar os dados", e)
+        return null
+    }
 }
 
 // Função para transformar uma string de cor em uma Color

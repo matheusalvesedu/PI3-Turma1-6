@@ -87,6 +87,12 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import androidx.core.content.edit
+import android.os.Build
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import androidx.annotation.RequiresApi
+import java.security.KeyStore
+import javax.crypto.KeyGenerator
 
 class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,8 +124,58 @@ fun checkPasswordRequirements(password: String): PasswordRequirements{
     )
 }
 
+private const val KEY_ALIAS = "br.com.superid.chave-mestra"
+
+@RequiresApi(Build.VERSION_CODES.M)
+private fun generateSecretKeyIfNeeded() {
+    try {
+        // 1. Obtenha uma instância do KeyStore do Android
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+
+        // 2. Verifique se a chave com nosso alias já existe
+        if (keyStore.containsAlias(KEY_ALIAS)) {
+            Log.d("KeyStore", "A chave com o alias '$KEY_ALIAS' já existe. Nenhuma ação necessária.")
+            return
+        }
+
+        // 3. Se não existir, configure os parâmetros para a nova chave
+        Log.d("KeyStore", "Gerando uma nova chave com o alias '$KEY_ALIAS'.")
+        val keyGenParameterSpec = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT // Propósito da chave
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM) // Modo de bloco seguro
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE) // Padding (GCM não requer)
+            .setKeySize(256) // Tamanho da chave em bits
+            .build()
+
+        // 4. Gere a chave
+        val keyGenerator = KeyGenerator.getInstance(
+            KeyProperties.KEY_ALGORITHM_AES,
+            "AndroidKeyStore" // Especifique o provedor do KeyStore
+        )
+        keyGenerator.init(keyGenParameterSpec)
+        keyGenerator.generateKey() // A chave é gerada e armazenada com segurança
+
+        Log.d("KeyStore", "Nova chave gerada e armazenada com sucesso no AndroidKeyStore.")
+
+    } catch (e: Exception) {
+        // Trate possíveis exceções de segurança
+        Log.e("KeyStore", "Falha ao gerar ou verificar a chave no KeyStore", e)
+        // Em um app real, você pode querer lançar uma exceção customizada ou tratar o erro de forma mais robusta
+        throw RuntimeException("Falha ao inicializar o cofre de chaves do aplicativo", e)
+    }
+}
+
 @SuppressLint("HardwareIds")
 fun saveNewAccountToDB(user: FirebaseUser?, name: String, email: String, deviceId: String){
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        generateSecretKeyIfNeeded()
+    } else {
+        Log.e("KeyStore", "A geração de chaves seguras requer Android 6.0 (API 23) ou superior.")
+    }
 
     val db = Firebase.firestore
     val UID = user!!.uid
