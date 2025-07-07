@@ -461,16 +461,18 @@ fun ScreenContent(
                     }
 
                     items(filteredSenhas) { item ->
-                        CardItem(
-                            apelido = item.apelido,
-                            login = "Login: ${item.login}",
-                            senha = aesDecryptWithKey(item.senha),
-                            descricao = "Descrição: ${item.descricao}",
-                            categoria = "Categoria: ${item.categoria}",
-                            idSenha = item.id,
-                            categorias = categorias,
-                            onDelete = { deletePassword(item.id) }
-                        )
+                        decrypt(item.senha)?.let {
+                            CardItem(
+                                apelido = item.apelido,
+                                login = "Login: ${item.login}",
+                                senha = it,
+                                descricao = "Descrição: ${item.descricao}",
+                                categoria = "Categoria: ${item.categoria}",
+                                idSenha = item.id,
+                                categorias = categorias,
+                                onDelete = { deletePassword(item.id) }
+                            )
+                        }
                     }
                 }
             } else {

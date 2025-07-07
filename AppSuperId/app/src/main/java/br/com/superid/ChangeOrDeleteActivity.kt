@@ -80,7 +80,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                 if (document != null && document.exists()) {
                     apelidocategoria = document.getString("Apelido da senha") ?: ""
                     login = document.getString("login") ?: ""
-                    senha = aesDecryptWithKey(document.getString("senha") ?: "")
+                    senha = decrypt(document.getString("senha") ?: "").toString()
                     descricao = document.getString("descrição") ?: ""
                     categoria = document.getString("categoria") ?: ""
 
@@ -181,7 +181,7 @@ fun ChangePassword(senhaId: String, modifier: Modifier) {
                                 mapOf(
                                     "Apelido da senha" to apelidocategoria,
                                     "login" to login,
-                                    "senha" to aesEncryptWithKey(senha),
+                                    "senha" to encrypt(senha),
                                     "descrição" to description,
                                     "categoria" to category
                                 )
